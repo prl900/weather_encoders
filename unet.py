@@ -4,14 +4,70 @@ from keras import models
 from keras.layers import BatchNormalization, Conv2D, UpSampling2D, MaxPooling2D, Dropout
 from keras.optimizers import Adam,SGD
 from keras import regularizers
+from keras import backend as K
+import tensorflow as tf
 import numpy as np
 import pickle
 
-def get_unet():
-    concat_axis = 3
-    inputs = layers.Input(shape = (80, 120, 7))
+"""
+def get_pod_loss(threshold):
 
-    feats = 32
+    def pod(y_true, y_pred):
+        # Probability of detection = Hits / (Hits + Misses)
+        hits = K.sum(K.cast(tf.math.logical_and(K.greater(y_true, threshold), K.greater(y_pred, threshold)), dtype='float32'))
+        misses = K.sum(K.cast(tf.math.logical_and(K.greater(y_true, threshold), K.less(y_pred, threshold)), dtype='float32'))
+    
+        return hits/(hits+misses)
+
+    return pod
+
+
+def get_far_loss(threshold):
+
+    def far(y_true, y_pred):
+        # False Alarm Rate score = False Alarms / (False Alarms + Hits)
+        hits = K.sum(K.cast(tf.math.logical_and(K.greater(y_true, threshold), K.greater(y_pred, threshold)), dtype='float32'))
+        f_alarms = K.sum(K.cast(tf.math.logical_and(K.less(y_true, threshold), K.greater(y_pred, threshold)), dtype='float32'))
+    
+        return f_alarms/(f_alarms+hits)
+
+    return far
+
+
+def get_bias_loss(threshold):
+
+    def bias(y_true, y_pred):
+        # Bias score = (Hits + False Alarms) / (Hits + Misses)
+        hits = K.sum(K.cast(tf.math.logical_and(K.greater(y_true, threshold), K.greater(y_pred, threshold)), dtype='float32'))
+        f_alarms = K.sum(K.cast(tf.math.logical_and(K.less(y_true, threshold), K.greater(y_pred, threshold)), dtype='float32'))
+        misses = K.sum(K.cast(tf.math.logical_and(K.greater(y_true, threshold), K.less(y_pred, threshold)), dtype='float32'))
+    
+        return (hits+f_alarms)/(hits+misses)
+    
+    return bias
+
+
+def get_ets_loss(threshold):
+
+    def ets(y_true, y_pred):
+        # Bias score = (Hits + False Alarms) / (Hits + Misses)
+        hits = K.sum(K.cast(tf.math.logical_and(K.greater(y_true, threshold), K.greater(y_pred, threshold)), dtype='float32'))
+        f_alarms = K.sum(K.cast(tf.math.logical_and(K.less(y_true, threshold), K.greater(y_pred, threshold)), dtype='float32'))
+        misses = K.sum(K.cast(tf.math.logical_and(K.greater(y_true, threshold), K.less(y_pred, threshold)), dtype='float32'))
+        true_neg = K.sum(K.cast(tf.math.logical_and(K.less(y_true, threshold), K.less(y_pred, threshold)), dtype='float32'))
+   
+        a_ref = ((hits+f_alarms)*(hits+misses))/(hits+f_alarms+misses+true_neg) 
+
+        return (hits-a_ref)/(hits+f_alarms+misses+a_ref)
+    
+    return ets
+"""
+
+def get_unet(loss):
+    concat_axis = 3
+    inputs = layers.Input(shape = (80, 120, 3))
+
+    feats = 16
     bn0 = BatchNormalization(axis=3)(inputs)
     conv1 = layers.Conv2D(feats, (3, 3), activation='relu', padding='same', name='conv1_1')(bn0)
     bn1 = BatchNormalization(axis=3)(conv1)
@@ -75,24 +131,29 @@ def get_unet():
     model = models.Model(inputs=inputs, outputs=conv10)
 
     sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-    model.compile(loss='mae', optimizer=sgd, metrics=['mse'])
-    #model.compile(loss='mae', optimizer=Adam(lr=0.001), metrics=['mse'])
+    #pod = get_pod_loss(.1)
+    #far = get_far_loss(.1)
+    #bias = get_bias_loss(.1)
+    #ets = get_ets_loss(.1)
+    model.compile(loss=loss, optimizer=sgd, metrics=['mse','mae'])
+    #model.compile(loss=loss, optimizer=sgd, metrics=['mse','mae', pod, far, bias, ets])
+    #model.compile(loss=loss, optimizer=Adam(lr=0.001), metrics=['mse'])
     print(model.summary())
 
     return model
 
 
 # Levels [1000, 900, 800, 700, 600, 500, 400, 300, 200, 100]
-x = np.load("/home/lar116/project/ERA-interim/10zlevels.npy")
-print("x loaded")
-y = 1000*np.load("/home/lar116/project/ERA-interim/full_tp_1980_2016.npy")
-print("x loaded")
+#x = x[:, :, :, [0,1,2,3,4,5,6]]
+#x = x[:, :, :, [0,2,5]]
+x = np.load("/home/lar116/project/ERA-interim/10zlevels.npy")[:, :, :, [0,2,5]]
+print(x.shape)
+y = np.clip(1000*np.load("/home/lar116/project/ERA-interim/full_tp_1980_2016.npy"), 0, 180)
 
 idxs = np.arange(x.shape[0])
 np.random.seed(0)
 np.random.shuffle(idxs)
 
-x = x[:, :, :, [0,1,2,3,4,6,8]]
 x = x[idxs, :, :, :]
 x_train = x[:40000, :]
 x_test = x[40000:, :]
@@ -101,11 +162,16 @@ y = y[idxs, :, :, None]
 y_train = y[:40000, :]
 y_test = y[40000:, :]
 
-print("data is ready")
+print(x_train.shape, y_train.shape)
 
-model = get_unet()
-history = model.fit(x_train, y_train, epochs=10, batch_size=10, verbose=1, validation_data=(x_test, y_test))
-with open('trainHistoryDict_unet1_{}-{}-{}'.format(i, j, k), 'wb') as file_pi:
-    pickle.dump(history.history, file_pi)
+model = get_unet('mae')
+history = model.fit(x_train, y_train, epochs=50, batch_size=10, validation_data=(x_test, y_test))
+with open('train_history_unet_mae_7lvels.pkl', 'wb') as f:
+    pickle.dump(history.history, f)
+model.save('unet_mae_7levels.h5')
 
-model.save('unet1_{}-{}-{}_.h5')
+model = get_unet('mse')
+history = model.fit(x_train, y_train, epochs=50, batch_size=10, validation_data=(x_test, y_test))
+with open('train_history_unet_mse_7lvels.pkl', 'wb') as f:
+    pickle.dump(history.history, f)
+model.save('unet_mse_7levels.h5')
