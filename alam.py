@@ -1,11 +1,66 @@
 import numpy as np
 from keras.models import load_model
 import keras.backend as K
+import tensorflow as tf
 from PIL import Image
 import matplotlib.cm as cm
 
 # Atmospheric Level Activation Mapping (ALAM)
 
+def get_pod_loss(threshold):
+
+    def pod(y_true, y_pred):
+        # Probability of detection = Hits / (Hits + Misses)
+        hits = K.sum(K.cast(tf.math.logical_and(K.greater(y_true, threshold), K.greater(y_pred, threshold)), dtype='float32'))
+        misses = K.sum(K.cast(tf.math.logical_and(K.greater(y_true, threshold), K.less(y_pred, threshold)), dtype='float32'))
+    
+        return hits/(hits+misses)
+
+    return pod
+
+
+def get_far_loss(threshold):
+
+    def far(y_true, y_pred):
+        # False Alarm Rate score = False Alarms / (False Alarms + Hits)
+        hits = K.sum(K.cast(tf.math.logical_and(K.greater(y_true, threshold), K.greater(y_pred, threshold)), dtype='float32'))
+        f_alarms = K.sum(K.cast(tf.math.logical_and(K.less(y_true, threshold), K.greater(y_pred, threshold)), dtype='float32'))
+    
+        return f_alarms/(f_alarms+hits)
+
+    return far
+
+
+def get_bias_loss(threshold):
+
+    def bias(y_true, y_pred):
+        # Bias score = (Hits + False Alarms) / (Hits + Misses)
+        hits = K.sum(K.cast(tf.math.logical_and(K.greater(y_true, threshold), K.greater(y_pred, threshold)), dtype='float32'))
+        f_alarms = K.sum(K.cast(tf.math.logical_and(K.less(y_true, threshold), K.greater(y_pred, threshold)), dtype='float32'))
+        misses = K.sum(K.cast(tf.math.logical_and(K.greater(y_true, threshold), K.less(y_pred, threshold)), dtype='float32'))
+    
+        return (hits+f_alarms)/(hits+misses)
+    
+    return bias
+
+
+def get_ets_loss(threshold):
+
+    def ets(y_true, y_pred):
+        # Bias score = (Hits + False Alarms) / (Hits + Misses)
+        hits = K.sum(K.cast(tf.math.logical_and(K.greater(y_true, threshold), K.greater(y_pred, threshold)), dtype='float32'))
+        f_alarms = K.sum(K.cast(tf.math.logical_and(K.less(y_true, threshold), K.greater(y_pred, threshold)), dtype='float32'))
+        misses = K.sum(K.cast(tf.math.logical_and(K.greater(y_true, threshold), K.less(y_pred, threshold)), dtype='float32'))
+        true_neg = K.sum(K.cast(tf.math.logical_and(K.less(y_true, threshold), K.less(y_pred, threshold)), dtype='float32'))
+   
+        a_ref = ((hits+f_alarms)*(hits+misses))/(hits+f_alarms+misses+true_neg) 
+
+        return (hits-a_ref)/(hits+f_alarms+misses+a_ref)
+    
+    return ets
+
+def loss(y_true,y_pred):
+    return K.mean(K.abs(y_pred-y_true))
 
 def get_rains(codes):
     arr = np.load("data/rain.npy")
@@ -19,10 +74,28 @@ def get_era_full(param, level):
     return arr.astype(np.float32) / 256.
 
 def get_alam():
-    model = load_model('unet.h5')
+    pod = get_pod_loss(.1)
+    far = get_far_loss(.1)
+    bias = get_bias_loss(.1)
+    ets = get_ets_loss(.1)
+    model = load_model('unet.h5', custom_objects={'loss': loss, 'pod': pod, 'far': far, 'bias': bias, 'ets':ets})
     print(len(model.layers))
-    print(len(model.layers[-1].get_weights()))
+    print(model.layers[0].get_config())
+    print(model.layers[0].get_weights())
     print('-'*24)
+    print(model.layers[1].get_config())
+    print(model.layers[1].get_weights())
+    print('-'*24)
+    print(model.layers[2].get_config())
+    print(model.layers[2].get_weights())
+    weights = np.moveaxis(model.layers[2].get_weights()[0], 2, -1)
+    print(weights.shape)
+    print(np.sum(np.abs(weights.reshape((-1,10))), axis=0))
+    
+    print(model.layers[2].get_weights()[0].shape)
+    print(model.layers[2].get_weights()[1].shape)
+    print('-'*24)
+    exit()
     print(model.layers[-5].get_weights()[0].shape)
     print(model.layers[-5].get_weights()[1].shape)
     print(model.layers[-5].get_config())
