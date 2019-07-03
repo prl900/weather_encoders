@@ -60,7 +60,7 @@ vals[:, 2] = blue
 rain = ListedColormap(vals)
 
 
-def comb_mse(y_true, y_pred):
+def comb_mae(y_true, y_pred):
     threshold = .5
     # False Alarm Rate score = False Alarms / (False Alarms + Hits)
     hits = K.sum(K.cast(K.sigmoid(y_true - threshold) * K.sigmoid(y_pred - threshold), dtype='float32'))
@@ -124,8 +124,16 @@ y = None
 
 print(x_test.shape, y_test.shape)
 
-model = load_model('unet_comb_mae_10levels.h5', custom_objects={'comb_mse': comb_mse, 'pod': pod, 'far': far, 'ets': ets, 'bias': bias})
+model = load_model('unet_comb_mae_10levels.h5', custom_objects={'comb_mae': comb_mae, 'pod': pod, 'far': far, 'ets': ets, 'bias': bias})
 
-rain = model.predict(x_test[4500:4501,:])
-plt.imsave('test_pred1.png', rain[0,:,:,0], vmax=np.log(181), cmap=rain)
+out = model.predict(x_test[4500:4501,:])
+plt.imsave('test_pred1.png', out[0,:,:,0], vmax=np.log(181), cmap=rain)
 plt.imsave('test_prec1.png', y_test[4500,:,:,0], vmax=np.log(181), cmap=rain)
+
+out = model.predict(x_test[4501:4502,:])
+plt.imsave('test_pred2.png', out[0,:,:,0], vmax=np.log(181), cmap=rain)
+plt.imsave('test_prec2.png', y_test[4501,:,:,0], vmax=np.log(181), cmap=rain)
+
+out = model.predict(x_test[4502:4503,:])
+plt.imsave('test_pred3.png', out[0,:,:,0], vmax=np.log(181), cmap=rain)
+plt.imsave('test_prec3.png', y_test[4502,:,:,0], vmax=np.log(181), cmap=rain)

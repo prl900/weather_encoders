@@ -243,7 +243,7 @@ losses = {'mae': 'mae', 'pod_mae': get_diff_pod_mae_loss(.5), 'pod_mae_log': get
 """
 
 #losses = {'comb_mse': get_diff_comb_mse_loss(.5), 'comb_mae': get_diff_comb_mae_loss(.5)}
-losses = {'comb_mae': get_diff_comb_mae_loss(.5)}
+losses = {'mae': 'mae', 'pod_mae': get_diff_pod_mae_loss(.5), 'far_mae': get_diff_far_mae_loss(.5), 'comb_mae': get_diff_comb_mae_loss(.5)}
 
 for name, loss in losses.items():
     print(name)
