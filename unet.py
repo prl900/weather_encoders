@@ -21,6 +21,26 @@ def get_pod_loss(threshold):
     return pod
 
 
+def get_diff_pod_mae_loss(threshold):
+    def pod_mae(y_true, y_pred):
+        # Probability of detection = Hits / (Hits + Misses)
+        hits = K.sum(K.cast(K.sigmoid(y_true - threshold) * K.sigmoid(y_pred - threshold), dtype='float32'))
+        misses = K.sum(K.cast(K.sigmoid(y_true - threshold) * K.sigmoid((-1 * y_pred) - threshold), dtype='float32'))
+    
+        return (hits+misses)/hits + K.mean(K.abs(y_pred - y_true), axis=-1)
+    
+    return pod_mae
+    
+def get_diff_pod_mse_loss(threshold):
+    def pod_mse(y_true, y_pred):
+        # Probability of detection = Hits / (Hits + Misses)
+        hits = K.sum(K.cast(K.sigmoid(y_true - threshold) * K.sigmoid(y_pred - threshold), dtype='float32'))
+        misses = K.sum(K.cast(K.sigmoid(y_true - threshold) * K.sigmoid((-1 * y_pred) - threshold), dtype='float32'))
+    
+        return (hits+misses)/hits + K.mean(K.square(y_pred - y_true), axis=-1)
+    
+    return pod_mse
+
 def get_far_loss(threshold):
 
     def far(y_true, y_pred):
@@ -32,6 +52,48 @@ def get_far_loss(threshold):
 
     return far
 
+def get_diff_far_mae_loss(threshold):
+    def far_mae(y_true, y_pred):
+        # False Alarm Rate score = False Alarms / (False Alarms + Hits)
+        hits = K.sum(K.cast(K.sigmoid(y_true - threshold) * K.sigmoid(y_pred - threshold), dtype='float32'))
+        f_alarms = K.sum(K.cast(K.sigmoid((-1 * y_true) - threshold) * K.sigmoid(y_pred - threshold), dtype='float32'))
+    
+        return f_alarms/(f_alarms+hits) + K.mean(K.abs(y_pred-y_true), axis=-1)
+    
+    return far_mae
+    
+   
+def get_diff_far_mse_loss(threshold):
+    def far_mse(y_true, y_pred):
+        # False Alarm Rate score = False Alarms / (False Alarms + Hits)
+        hits = K.sum(K.cast(K.sigmoid(y_true - threshold) * K.sigmoid(y_pred - threshold), dtype='float32'))
+        f_alarms = K.sum(K.cast(K.sigmoid((-1 * y_true) - threshold) * K.sigmoid(y_pred - threshold), dtype='float32'))
+    
+        return f_alarms/(f_alarms+hits) + K.mean(K.square(y_pred-y_true), axis=-1)
+    
+    return far_mse
+
+def get_diff_comb_mae_loss(threshold):
+    def comb_mae(y_true, y_pred):
+        # False Alarm Rate score = False Alarms / (False Alarms + Hits)
+        hits = K.sum(K.cast(K.sigmoid(y_true - threshold) * K.sigmoid(y_pred - threshold), dtype='float32'))
+        misses = K.sum(K.cast(K.sigmoid(y_true - threshold) * K.sigmoid((-1 * y_pred) - threshold), dtype='float32'))
+        f_alarms = K.sum(K.cast(K.sigmoid((-1 * y_true) - threshold) * K.sigmoid(y_pred - threshold), dtype='float32'))
+    
+        return (hits+misses)/hits + f_alarms/(f_alarms+hits) + K.mean(K.abs(y_pred-y_true), axis=-1)
+    
+    return comb_mae
+
+def get_diff_comb_mse_loss(threshold):
+    def comb_mse(y_true, y_pred):
+        # False Alarm Rate score = False Alarms / (False Alarms + Hits)
+        hits = K.sum(K.cast(K.sigmoid(y_true - threshold) * K.sigmoid(y_pred - threshold), dtype='float32'))
+        misses = K.sum(K.cast(K.sigmoid(y_true - threshold) * K.sigmoid((-1 * y_pred) - threshold), dtype='float32'))
+        f_alarms = K.sum(K.cast(K.sigmoid((-1 * y_true) - threshold) * K.sigmoid(y_pred - threshold), dtype='float32'))
+    
+        return (hits+misses)/hits + f_alarms/(f_alarms+hits) + K.mean(K.square(y_pred-y_true), axis=-1)
+    
+    return comb_mse
 
 def get_bias_loss(threshold):
 
@@ -44,7 +106,6 @@ def get_bias_loss(threshold):
         return (hits+f_alarms)/(hits+misses)
     
     return bias
-
 
 def get_ets_loss(threshold):
 
@@ -60,6 +121,7 @@ def get_ets_loss(threshold):
         return (hits-a_ref)/(hits+f_alarms+misses+a_ref)
     
     return ets
+
 
 def loss(y_true,y_pred):
     hits = K.sum(K.cast(tf.math.logical_and(K.greater(y_true, .1), K.greater(y_pred, .1)), dtype='float32'))
@@ -156,7 +218,8 @@ def get_unet(loss):
 #x = np.load("/data/ERA-Int/10zlevels.npy")[:, :, :, [0,2,5]]
 x = np.load("/data/ERA-Int/10zlevels_min.npy")
 print(x.shape)
-y = np.log(1+np.clip(100*np.load("/data/ERA-Int/tp_min.npy"), 0, 18))
+y = np.log(1+np.load("/data/ERA-Int/tp_min.npy"))
+print(y.shape, y.max())
 
 idxs = np.arange(x.shape[0])
 np.random.seed(0)
@@ -172,16 +235,20 @@ y_test = y[14000:, :]
 
 print(x_train.shape, y_train.shape)
 
-model = get_unet('mae')
-history = model.fit(x_train, y_train, epochs=100, batch_size=32, validation_data=(x_test, y_test))
-with open('train_history_unet_far_10lvels.pkl', 'wb') as f:
-    pickle.dump(history.history, f)
-model.save('unet_far_10levels.h5')
+"""
+losses = {'mae': 'mae', 'pod_mae': get_diff_pod_mae_loss(.5), 'pod_mae_log': get_diff_pod_mae_log_loss(.5), 
+          'far_mae': get_diff_far_mae_loss(.5), 'far_mae_log': get_diff_far_mae_log_loss(.5), 
+          'mse': 'mse', 'pod_mse': get_diff_pod_mse_loss(.5), 'pod_mse_log': get_diff_pod_mse_log_loss(.5), 
+          'far_mse': get_diff_far_mse_loss(.5), 'far_mse_log': get_diff_far_mse_log_loss(.5)}
+"""
 
-"""
-model = get_unet('mse')
-history = model.fit(x_train, y_train, epochs=100, batch_size=32, validation_data=(x_test, y_test))
-with open('train_history_unet_mse_10lvels.pkl', 'wb') as f:
-    pickle.dump(history.history, f)
-model.save('unet_mse_10levels.h5')
-"""
+#losses = {'comb_mse': get_diff_comb_mse_loss(.5), 'comb_mae': get_diff_comb_mae_loss(.5)}
+losses = {'comb_mae': get_diff_comb_mae_loss(.5)}
+
+for name, loss in losses.items():
+    print(name)
+    model = get_unet(loss)
+    history = model.fit(x_train, y_train, epochs=200, batch_size=32, validation_data=(x_test, y_test))
+    with open('train_history_unet_{}_10lvels.pkl'.format(name), 'wb') as f:
+        pickle.dump(history.history, f)
+    model.save('unet_{}_10levels.h5'.format(name))
