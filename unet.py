@@ -132,6 +132,16 @@ def loss(y_true,y_pred):
     #return 10*(f_alarms/(f_alarms+hits))
     return K.mean(K.log(1+K.abs(y_pred - y_true)), axis=-1)
 
+def rms_loss(y_true,y_pred):
+    return K.sqrt(K.mean(K.square(K.log(1.5+y_pred) - K.log(1.4+y_true)), axis=-1))
+
+def rmsf_loss(y_true,y_pred):
+    # RMSF as in:
+    # https://rmets.onlinelibrary.wiley.com/doi/pdf/10.1017/S1350482798000577 
+
+    #return K.exp(K.sqrt(K.mean(K.log(K.square(((y_pred+.1) / (y_true+.1)))), axis=-1)))
+    return K.mean(K.square(K.log(y_pred+1.5) - K.log(y_true+1.4)), axis=-1)
+
 def get_unet(loss):
     concat_axis = 3
     inputs = layers.Input(shape = (80, 120, 10))
@@ -218,8 +228,11 @@ def get_unet(loss):
 #x = np.load("/data/ERA-Int/10zlevels.npy")[:, :, :, [0,2,5]]
 x = np.load("/data/ERA-Int/10zlevels_min.npy")
 print(x.shape)
-y = np.log(1+np.load("/data/ERA-Int/tp_min.npy"))
-print(y.shape, y.max())
+y = np.load("/data/ERA-Int/tp_min.npy")
+print(y.shape, y.min(), y.max())
+#y = np.log(1+y)
+#print(y.shape, y.min(), y.max())
+#exit()
 
 idxs = np.arange(x.shape[0])
 np.random.seed(0)
@@ -244,7 +257,9 @@ losses = {'mae': 'mae', 'pod_mae': get_diff_pod_mae_loss(.5), 'pod_mae_log': get
 
 #losses = {'comb_mse': get_diff_comb_mse_loss(.5), 'comb_mae': get_diff_comb_mae_loss(.5)}
 #losses = {'mae': 'mae', 'pod_mae': get_diff_pod_mae_loss(.5), 'far_mae': get_diff_far_mae_loss(.5), 'comb_mae': get_diff_comb_mae_loss(.5)}
-losses = {'15far_mae': get_diff_far_mae_loss(.5, 15)}
+#losses = {'15far_mae': get_diff_far_mae_loss(.5, 15)}
+#losses = {'rmsf': rmsf_loss}
+losses = {'rms': rms_loss}
 
 for name, loss in losses.items():
     print(name)
