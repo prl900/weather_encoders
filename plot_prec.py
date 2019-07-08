@@ -69,6 +69,14 @@ def comb_mae(y_true, y_pred):
 
     return (hits+misses)/hits + f_alarms/(f_alarms+hits) + K.mean(K.abs(y_pred-y_true), axis=-1)
 
+def pod_mae(y_true, y_pred):
+    threshold = .5
+    # Probability of detection = Hits / (Hits + Misses)
+    hits = K.sum(K.cast(K.sigmoid(y_true - threshold) * K.sigmoid(y_pred - threshold), dtype='float32'))
+    misses = K.sum(K.cast(K.sigmoid(y_true - threshold) * K.sigmoid((-1 * y_pred) - threshold), dtype='float32'))
+
+    return (hits+misses)/hits + K.mean(K.abs(y_pred - y_true), axis=-1)
+
 def pod(y_true, y_pred):
     threshold = .5
     # Probability of detection = Hits / (Hits + Misses)
@@ -124,16 +132,33 @@ y = None
 
 print(x_test.shape, y_test.shape)
 
-model = load_model('unet_comb_mae_10levels.h5', custom_objects={'comb_mae': comb_mae, 'pod': pod, 'far': far, 'ets': ets, 'bias': bias})
+plt.imsave('test_prec1.png', y_test[4500,:,:,0], vmax=np.log(181), cmap=rain)
+plt.imsave('test_prec2.png', y_test[4501,:,:,0], vmax=np.log(181), cmap=rain)
+plt.imsave('test_prec3.png', y_test[4502,:,:,0], vmax=np.log(181), cmap=rain)
+y_test = None
+print("Done 1")
+
+model = load_model('unet_mae_10levels.h5', custom_objects={'pod': pod, 'far': far, 'ets': ets, 'bias': bias})
 
 out = model.predict(x_test[4500:4501,:])
 plt.imsave('test_pred1.png', out[0,:,:,0], vmax=np.log(181), cmap=rain)
-plt.imsave('test_prec1.png', y_test[4500,:,:,0], vmax=np.log(181), cmap=rain)
 
 out = model.predict(x_test[4501:4502,:])
 plt.imsave('test_pred2.png', out[0,:,:,0], vmax=np.log(181), cmap=rain)
-plt.imsave('test_prec2.png', y_test[4501,:,:,0], vmax=np.log(181), cmap=rain)
 
 out = model.predict(x_test[4502:4503,:])
 plt.imsave('test_pred3.png', out[0,:,:,0], vmax=np.log(181), cmap=rain)
-plt.imsave('test_prec3.png', y_test[4502,:,:,0], vmax=np.log(181), cmap=rain)
+print("Done 2")
+
+##############
+
+model = load_model('unet_pod_mae_10levels.h5', custom_objects={'pod_mae': pod_mae, 'pod': pod, 'far': far, 'ets': ets, 'bias': bias})
+out = model.predict(x_test[4500:4501,:])
+plt.imsave('test_pod_pred1.png', out[0,:,:,0], vmax=np.log(181), cmap=rain)
+
+out = model.predict(x_test[4501:4502,:])
+plt.imsave('test_pod_pred2.png', out[0,:,:,0], vmax=np.log(181), cmap=rain)
+
+out = model.predict(x_test[4502:4503,:])
+plt.imsave('test_pod_pred3.png', out[0,:,:,0], vmax=np.log(181), cmap=rain)
+print("Done 3")

@@ -52,13 +52,13 @@ def get_far_loss(threshold):
 
     return far
 
-def get_diff_far_mae_loss(threshold):
+def get_diff_far_mae_loss(threshold, coef):
     def far_mae(y_true, y_pred):
         # False Alarm Rate score = False Alarms / (False Alarms + Hits)
         hits = K.sum(K.cast(K.sigmoid(y_true - threshold) * K.sigmoid(y_pred - threshold), dtype='float32'))
         f_alarms = K.sum(K.cast(K.sigmoid((-1 * y_true) - threshold) * K.sigmoid(y_pred - threshold), dtype='float32'))
     
-        return f_alarms/(f_alarms+hits) + K.mean(K.abs(y_pred-y_true), axis=-1)
+        return (coef*f_alarms/(f_alarms+hits)) + K.mean(K.abs(y_pred-y_true), axis=-1)
     
     return far_mae
     
@@ -243,7 +243,8 @@ losses = {'mae': 'mae', 'pod_mae': get_diff_pod_mae_loss(.5), 'pod_mae_log': get
 """
 
 #losses = {'comb_mse': get_diff_comb_mse_loss(.5), 'comb_mae': get_diff_comb_mae_loss(.5)}
-losses = {'mae': 'mae', 'pod_mae': get_diff_pod_mae_loss(.5), 'far_mae': get_diff_far_mae_loss(.5), 'comb_mae': get_diff_comb_mae_loss(.5)}
+#losses = {'mae': 'mae', 'pod_mae': get_diff_pod_mae_loss(.5), 'far_mae': get_diff_far_mae_loss(.5), 'comb_mae': get_diff_comb_mae_loss(.5)}
+losses = {'15far_mae': get_diff_far_mae_loss(.5, 15)}
 
 for name, loss in losses.items():
     print(name)
