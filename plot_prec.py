@@ -116,7 +116,8 @@ def ets(y_true, y_pred):
 
 
 x = np.load("/data/ERA-Int/10zlevels_min.npy")
-y = np.log(1+np.load("/data/ERA-Int/tp_min.npy"))
+#y = np.log(1+np.load("/data/ERA-Int/tp_min.npy"))
+y = np.load("/data/ERA-Int/tp_min.npy")
 
 idxs = np.arange(x.shape[0])
 np.random.seed(0)
@@ -132,33 +133,33 @@ y = None
 
 print(x_test.shape, y_test.shape)
 
-plt.imsave('test_prec1.png', y_test[4500,:,:,0], vmax=np.log(181), cmap=rain)
-plt.imsave('test_prec2.png', y_test[4501,:,:,0], vmax=np.log(181), cmap=rain)
-plt.imsave('test_prec3.png', y_test[4502,:,:,0], vmax=np.log(181), cmap=rain)
+plt.imsave('test_prec1.png', y_test[4500,:,:,0], vmax=180, cmap=rain)
+plt.imsave('test_prec2.png', y_test[4501,:,:,0], vmax=180, cmap=rain)
+plt.imsave('test_prec3.png', y_test[4502,:,:,0], vmax=180, cmap=rain)
 y_test = None
 print("Done 1")
 
-model = load_model('unet_mae_10levels.h5', custom_objects={'pod': pod, 'far': far, 'ets': ets, 'bias': bias})
+model = load_model('unet_mse_raw_10levels.h5', custom_objects={'pod': pod, 'far': far, 'ets': ets, 'bias': bias})
 
 out = model.predict(x_test[4500:4501,:])
-plt.imsave('test_pred1.png', out[0,:,:,0], vmax=np.log(181), cmap=rain)
+plt.imsave('test_mse_raw_pred1.png', out[0,:,:,0], vmax=180, cmap=rain)
 
 out = model.predict(x_test[4501:4502,:])
-plt.imsave('test_pred2.png', out[0,:,:,0], vmax=np.log(181), cmap=rain)
+plt.imsave('test_mse_raw_pred2.png', out[0,:,:,0], vmax=180, cmap=rain)
 
 out = model.predict(x_test[4502:4503,:])
-plt.imsave('test_pred3.png', out[0,:,:,0], vmax=np.log(181), cmap=rain)
+plt.imsave('test_mse_raw_pred3.png', out[0,:,:,0], vmax=180, cmap=rain)
 print("Done 2")
 
 ##############
 
-model = load_model('unet_pod_mae_10levels.h5', custom_objects={'pod_mae': pod_mae, 'pod': pod, 'far': far, 'ets': ets, 'bias': bias})
+model = load_model('unet_mse_10levels.h5', custom_objects={'pod_mae': pod_mae, 'pod': pod, 'far': far, 'ets': ets, 'bias': bias})
 out = model.predict(x_test[4500:4501,:])
-plt.imsave('test_pod_pred1.png', out[0,:,:,0], vmax=np.log(181), cmap=rain)
+plt.imsave('test_mse_pred1.png', out[0,:,:,0], vmax=np.log(181), cmap=rain)
 
 out = model.predict(x_test[4501:4502,:])
-plt.imsave('test_pod_pred2.png', out[0,:,:,0], vmax=np.log(181), cmap=rain)
+plt.imsave('test_mse_pred2.png', out[0,:,:,0], vmax=np.log(181), cmap=rain)
 
 out = model.predict(x_test[4502:4503,:])
-plt.imsave('test_pod_pred3.png', out[0,:,:,0], vmax=np.log(181), cmap=rain)
+plt.imsave('test_mse_pred3.png', out[0,:,:,0], vmax=np.log(181), cmap=rain)
 print("Done 3")

@@ -133,7 +133,7 @@ def loss(y_true,y_pred):
     return K.mean(K.log(1+K.abs(y_pred - y_true)), axis=-1)
 
 def rms_loss(y_true,y_pred):
-    return K.sqrt(K.mean(K.square(K.log(1.5+y_pred) - K.log(1.4+y_true)), axis=-1))
+    return K.mean(K.square(K.log(y_pred+6.4) - K.log(y_true+1.4)), axis=-1)
 
 def rmsf_loss(y_true,y_pred):
     # RMSF as in:
@@ -230,8 +230,8 @@ x = np.load("/data/ERA-Int/10zlevels_min.npy")
 print(x.shape)
 y = np.load("/data/ERA-Int/tp_min.npy")
 print(y.shape, y.min(), y.max())
-#y = np.log(1+y)
-#print(y.shape, y.min(), y.max())
+y = np.log(1+y)
+print(y.shape, y.min(), y.max())
 #exit()
 
 idxs = np.arange(x.shape[0])
@@ -259,7 +259,8 @@ losses = {'mae': 'mae', 'pod_mae': get_diff_pod_mae_loss(.5), 'pod_mae_log': get
 #losses = {'mae': 'mae', 'pod_mae': get_diff_pod_mae_loss(.5), 'far_mae': get_diff_far_mae_loss(.5), 'comb_mae': get_diff_comb_mae_loss(.5)}
 #losses = {'15far_mae': get_diff_far_mae_loss(.5, 15)}
 #losses = {'rmsf': rmsf_loss}
-losses = {'rms': rms_loss}
+#losses = {'msle_raw': 'msle', 'mse_raw': 'mse', 'mae_raw': 'mae'}
+losses = {'mse': 'mse'}
 
 for name, loss in losses.items():
     print(name)
