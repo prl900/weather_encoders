@@ -1,6 +1,7 @@
 from keras import layers
 from keras import models
 from keras.layers import BatchNormalization, Conv2D, UpSampling2D, MaxPooling2D, Dropout
+from keras.optimizers import SGD
 import numpy as np
 import pickle
 from categorical_losses import categorical_losses as closs
@@ -73,13 +74,7 @@ def get_unet(loss):
     model = models.Model(inputs=inputs, outputs=conv10)
 
     sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-    pod = get_pod_loss(.1)
-    far = get_far_loss(.1)
-    bias = get_bias_loss(.1)
-    ets = get_ets_loss(.1)
-    #model.compile(loss=loss, optimizer=sgd, metrics=['mse','mae'])
-    model.compile(loss=loss, optimizer=sgd, metrics=['mse','mae', pod, far, bias, ets])
-    #model.compile(loss=loss, optimizer=Adam(lr=0.001), metrics=['mse'])
+    model.compile(loss=loss, optimizer=sgd, metrics=['mse','mae', closs.get_pod_loss(.1), closs.get_far_loss(.1), closs.get_bias_loss(.1)])
     print(model.summary())
 
     return model
