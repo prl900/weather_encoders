@@ -74,7 +74,7 @@ def get_unet(loss):
     model = models.Model(inputs=inputs, outputs=conv10)
 
     sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-    model.compile(loss=loss, optimizer=sgd, metrics=['mse','mae', closs.get_pod_loss(.1), closs.get_far_loss(.1), closs.get_bias_loss(.1)])
+    model.compile(loss=loss, optimizer=sgd, metrics=['mse','mae', closs.get_pod_loss(.1), closs.get_pom_loss(.1), closs.get_far_loss(.1), closs.get_pofd_loss(.1)])
     print(model.summary())
 
     return model
@@ -106,19 +106,7 @@ y_test = y[14000:, :]
 
 print(x_train.shape, y_train.shape)
 
-"""
-losses = {'mae': 'mae', 'pod_mae': get_diff_pod_mae_loss(.5), 'pod_mae_log': get_diff_pod_mae_log_loss(.5), 
-          'far_mae': get_diff_far_mae_loss(.5), 'far_mae_log': get_diff_far_mae_log_loss(.5), 
-          'mse': 'mse', 'pod_mse': get_diff_pod_mse_loss(.5), 'pod_mse_log': get_diff_pod_mse_log_loss(.5), 
-          'far_mse': get_diff_far_mse_loss(.5), 'far_mse_log': get_diff_far_mse_log_loss(.5)}
-"""
-
-losses = {'comb_mse': closs.get_diff_comb_mse_loss(.5), 'comb_mae': closs.get_diff_comb_mae_loss(.5)}
-#losses = {'mae': 'mae', 'pod_mae': get_diff_pod_mae_loss(.5), 'far_mae': get_diff_far_mae_loss(.5), 'comb_mae': get_diff_comb_mae_loss(.5)}
-#losses = {'15far_mae': get_diff_far_mae_loss(.5, 15)}
-#losses = {'rmsf': rmsf_loss}
-#losses = {'msle_raw': 'msle', 'mse_raw': 'mse', 'mae_raw': 'mae'}
-#losses = {'mse': 'mse'}
+losses = {'pom_mae': closs.get_diff_pom_mae_loss(.5), 'pofd_mae': closs.get_diff_pofd_mae_loss(.5),'pom_mse': closs.get_diff_pom_mse_loss(.5), 'pofd_mse': closs.get_diff_pofd_mse_loss(.5), 'mae': 'mae', 'mse': 'mse'}
 
 for name, loss in losses.items():
     print(name)

@@ -15,6 +15,20 @@ def get_pod_loss(threshold):
 
     return pod
 
+
+def get_pom_loss(threshold):
+    def pom(y_true, y_pred):
+        # Probability of missing = Misses / (Hits + Misses)
+        hits = K.sum(
+            K.cast(tf.math.logical_and(K.greater(y_true, threshold), K.greater(y_pred, threshold)), dtype='float32'))
+        misses = K.sum(
+            K.cast(tf.math.logical_and(K.greater(y_true, threshold), K.less(y_pred, threshold)), dtype='float32'))
+
+        return misses / (hits + misses)
+
+    return pom
+
+
 def get_far_loss(threshold):
     def far(y_true, y_pred):
         # False Alarm Rate score = False Alarms / (False Alarms + Hits)
@@ -26,6 +40,19 @@ def get_far_loss(threshold):
         return f_alarms / (f_alarms + hits)
 
     return far
+
+
+def get_pofd_loss(threshold):
+    def pofd(y_true, y_pred):
+
+        # Probability of False Detection = False Alarms / (False Alarms + True Negatives)
+        f_alarms = K.sum(K.cast(tf.math.logical_and(K.less(y_true, threshold), K.greater(y_pred, threshold)), dtype='float32'))
+        true_neg = K.sum(K.cast(tf.math.logical_and(K.less(y_true, threshold), K.less(y_pred, threshold)), dtype='float32'))
+
+        return f_alarms / (f_alarms + true_neg)
+
+    return pofd
+
 
 def get_bias_loss(threshold):
     def bias(y_true, y_pred):
@@ -40,6 +67,7 @@ def get_bias_loss(threshold):
         return (hits + f_alarms) / (hits + misses)
 
     return bias
+
 
 def get_ets_loss(threshold):
     def ets(y_true, y_pred):
@@ -62,27 +90,47 @@ def get_ets_loss(threshold):
 
 # Differentiable losses
 
-def get_diff_pod_mae_loss(threshold):
-    def pod_mae(y_true, y_pred):
-        # Probability of detection = Hits / (Hits + Misses)
+def get_diff_pom_mae_loss(threshold):
+    def pom_mae(y_true, y_pred):
+        # Probability of missing = Misses / (Hits + Misses)
         hits = K.sum(K.cast(K.sigmoid(y_true - threshold) * K.sigmoid(y_pred - threshold), dtype='float32'))
         misses = K.sum(K.cast(K.sigmoid(y_true - threshold) * K.sigmoid((-1 * y_pred) - threshold), dtype='float32'))
 
-        return (hits + misses) / hits + K.mean(K.abs(y_pred - y_true), axis=-1)
+        return misses / (hits + misses) + K.mean(K.abs(y_pred - y_true), axis=-1)
 
-    return pod_mae
+    return pom_mae
 
-
-def get_diff_pod_mse_loss(threshold):
-    def pod_mse(y_true, y_pred):
-        # Probability of detection = Hits / (Hits + Misses)
+def get_diff_pom_mse_loss(threshold):
+    def pom_mae(y_true, y_pred):
+        # Probability of missing = Misses / (Hits + Misses)
         hits = K.sum(K.cast(K.sigmoid(y_true - threshold) * K.sigmoid(y_pred - threshold), dtype='float32'))
         misses = K.sum(K.cast(K.sigmoid(y_true - threshold) * K.sigmoid((-1 * y_pred) - threshold), dtype='float32'))
 
-        return (hits + misses) / hits + K.mean(K.square(y_pred - y_true), axis=-1)
+        return misses / (hits + misses) + K.mean(K.square(y_pred - y_true), axis=-1)
 
-    return pod_mse
+    return pom_mae
 
+
+def get_diff_pofd_mae_loss(threshold):
+    def pofd_mae(y_true, y_pred):
+        # False Alarm Rate score = False Alarms / (False Alarms + Hits)
+        true_neg = K.sum(K.cast(K.sigmoid((-1 * y_true) - threshold) * K.sigmoid((-1 * y_pred) - threshold), dtype='float32'))
+        f_alarms = K.sum(K.cast(K.sigmoid((-1 * y_true) - threshold) * K.sigmoid(y_pred - threshold), dtype='float32'))
+
+        return f_alarms / (f_alarms + true_neg) + K.mean(K.abs(y_pred - y_true), axis=-1)
+
+    return pofd_mae
+
+
+def get_diff_pofd_mse_loss(threshold):
+    def pofd_mse(y_true, y_pred):
+        # False Alarm Rate score = False Alarms / (False Alarms + Hits)
+        true_neg = K.sum(K.cast(K.sigmoid((-1 * y_true) - threshold) * K.sigmoid((-1 * y_pred) - threshold), dtype='float32'))
+        f_alarms = K.sum(K.cast(K.sigmoid((-1 * y_true) - threshold) * K.sigmoid(y_pred - threshold), dtype='float32'))
+
+        return f_alarms / (f_alarms + true_neg) + K.mean(K.square(y_pred - y_true), axis=-1)
+
+    return pofd_mse
 
 def get_diff_far_mae_loss(threshold, coef):
     def far_mae(y_true, y_pred):
