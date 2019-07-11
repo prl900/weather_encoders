@@ -88,9 +88,6 @@ x = np.load("/data/ERA-Int/10zlevels_min.npy")
 print(x.shape)
 y = np.load("/data/ERA-Int/tp_min.npy")
 print(y.shape, y.min(), y.max())
-y = np.log(1+y)
-print(y.shape, y.min(), y.max())
-#exit()
 
 idxs = np.arange(x.shape[0])
 np.random.seed(0)
@@ -105,6 +102,21 @@ y_train = y[:14000, :]
 y_test = y[14000:, :]
 
 print(x_train.shape, y_train.shape)
+
+losses = {'pom_mae_raw': closs.get_diff_pom_mae_loss(.5), 'pofd_mae_raw': closs.get_diff_pofd_mae_loss(.5),'pom_mse_raw': closs.get_diff_pom_mse_loss(.5), 'pofd_mse_raw': closs.get_diff_pofd_mse_loss(.5), 'mae_raw': 'mae', 'mse_raw': 'mse'}
+
+for name, loss in losses.items():
+    print(name)
+    model = get_unet(loss)
+    history = model.fit(x_train, y_train, epochs=200, batch_size=32, validation_data=(x_test, y_test))
+    with open('train_history_unet_{}_10lvels.pkl'.format(name), 'wb') as f:
+        pickle.dump(history.history, f)
+    model.save('unet_{}_10levels.h5'.format(name))
+
+exit()
+
+y_train = np.log(1+y_train)
+y_test = np.log(1+y_test)
 
 losses = {'pom_mae': closs.get_diff_pom_mae_loss(.5), 'pofd_mae': closs.get_diff_pofd_mae_loss(.5),'pom_mse': closs.get_diff_pom_mse_loss(.5), 'pofd_mse': closs.get_diff_pofd_mse_loss(.5), 'mae': 'mae', 'mse': 'mse'}
 
