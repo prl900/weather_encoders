@@ -27,7 +27,7 @@ def plot_mae_history(hist_file, plot_name):
 
     fig, ax1 = plt.subplots()
     ax1.set_xlabel('epoch')
-    ax1.set_ylabel('mse')
+    ax1.set_ylabel('mae')
     ax1.set_title('Mean Absolute Error')
     ax1.set_ylim([0, math.ceil(max(h['mean_absolute_error']))])
     ax1.plot(h['mean_absolute_error'])

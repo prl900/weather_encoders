@@ -103,7 +103,10 @@ print("Extremes:", y_test.min(), y_test.max(), y_test.mean())
 print("MSV:", np.mean(np.square(y_test)))
 
 sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-losses = {'log_mae': closs.log_mae_loss, 'log_mse': closs.log_mae_loss}
+
+"""
+losses = {'log_mae': closs.log_mae_loss, 'log_mse': closs.log_mse_loss}
+losses = {'log_mse': closs.log_mse_loss}
 
 for name, loss in losses.items():
     print(name)
@@ -119,6 +122,7 @@ for name, loss in losses.items():
     with open('train_history_unet_{}_10lvels.pkl'.format(name), 'wb') as f:
         pickle.dump(history.history, f)
     model.save('unet_{}_10levels.h5'.format(name))
+"""
 
 
 y_train = np.log(1+y_train)
@@ -126,14 +130,16 @@ y_test = np.log(1+y_test)
 print("Extremes:", y_test.min(), y_test.max(), y_test.mean())
 print("MSV:", np.mean(np.square(y_test)))
 
-losses = {'norm_mae': closs.norm_mae_loss, 'norm_mse': closs.norm_mae_loss}
+losses = {'norm_mae': closs.norm_mae_loss, 'norm_mse': closs.norm_mse_loss}
+losses = {'norm_mse': closs.norm_mse_loss}
+losses = {'pom_mse_norm': closs.get_diff_pom_mse_norm_loss(.1)}
 
 for name, loss in losses.items():
     print(name)
     model = get_unet(loss)
     model.compile(loss=loss, optimizer=sgd, metrics=['mse','mae', closs.get_pod_loss(.1), closs.get_pom_loss(.1), closs.get_far_loss(.1), closs.get_pofd_loss(.1)])
     print(model.summary())
-    history = model.fit(x_train, y_train, epochs=200, batch_size=32, validation_data=(x_test, y_test))
+    history = model.fit(x_train, y_train, epochs=50, batch_size=32, validation_data=(x_test, y_test))
     with open('train_history_unet_{}_10lvels.pkl'.format(name), 'wb') as f:
         pickle.dump(history.history, f)
     model.save('unet_{}_10levels.h5'.format(name))

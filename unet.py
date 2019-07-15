@@ -102,7 +102,7 @@ y_train = y[:14000, :]
 y_test = y[14000:, :]
 
 print(x_train.shape, y_train.shape)
-
+"""
 losses = {'pom_mae_raw': closs.get_diff_pom_mae_loss(.5), 'pofd_mae_raw': closs.get_diff_pofd_mae_loss(.5),'pom_mse_raw': closs.get_diff_pom_mse_loss(.5), 'pofd_mse_raw': closs.get_diff_pofd_mse_loss(.5), 'mae_raw': 'mae', 'mse_raw': 'mse'}
 
 for name, loss in losses.items():
@@ -112,13 +112,13 @@ for name, loss in losses.items():
     with open('train_history_unet_{}_10lvels.pkl'.format(name), 'wb') as f:
         pickle.dump(history.history, f)
     model.save('unet_{}_10levels.h5'.format(name))
-
-exit()
+"""
 
 y_train = np.log(1+y_train)
 y_test = np.log(1+y_test)
 
-losses = {'pom_mae': closs.get_diff_pom_mae_loss(.5), 'pofd_mae': closs.get_diff_pofd_mae_loss(.5),'pom_mse': closs.get_diff_pom_mse_loss(.5), 'pofd_mse': closs.get_diff_pofd_mse_loss(.5), 'mae': 'mae', 'mse': 'mse'}
+#losses = {'pom_mae': closs.get_diff_pom_mae_loss(.5), 'pofd_mae': closs.get_diff_pofd_mae_loss(.5),'pom_mse': closs.get_diff_pom_mse_loss(.5), 'pofd_mse': closs.get_diff_pofd_mse_loss(.5), 'mae': 'mae', 'mse': 'mse'}
+losses = {'far_mae': closs.get_diff_far_mae_loss(.5),'pom_mse': closs.get_diff_pom_mse_loss(.5), 'far_mse': closs.get_diff_far_mse_loss(.5), 'pofd_mse': closs.get_diff_pofd_mse_loss(.5), 'comb_mae': closs.get_diff_comb_mae_loss(.5), 'comb_mse': closs.get_diff_comb_mse_loss(.5)}
 
 for name, loss in losses.items():
     print(name)
