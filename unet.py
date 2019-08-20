@@ -118,7 +118,8 @@ y_train = np.log(1+y_train)
 y_test = np.log(1+y_test)
 
 #losses = {'pom_mae': closs.get_diff_pom_mae_loss(.5), 'pofd_mae': closs.get_diff_pofd_mae_loss(.5),'pom_mse': closs.get_diff_pom_mse_loss(.5), 'pofd_mse': closs.get_diff_pofd_mse_loss(.5), 'mae': 'mae', 'mse': 'mse'}
-losses = {'far_mae': closs.get_diff_far_mae_loss(.5),'pom_mse': closs.get_diff_pom_mse_loss(.5), 'far_mse': closs.get_diff_far_mse_loss(.5), 'pofd_mse': closs.get_diff_pofd_mse_loss(.5), 'comb_mae': closs.get_diff_comb_mae_loss(.5), 'comb_mse': closs.get_diff_comb_mse_loss(.5)}
+#losses = {'far_mae': closs.get_diff_far_mae_loss(.5),'pom_mse': closs.get_diff_pom_mse_loss(.5), 'far_mse': closs.get_diff_far_mse_loss(.5), 'pofd_mse': closs.get_diff_pofd_mse_loss(.5), 'comb_mae': closs.get_diff_comb_mae_loss(.5), 'comb_mse': closs.get_diff_comb_mse_loss(.5, .1, .1)}
+losses = {'comb_mse_11': closs.get_diff_comb_mse_loss(.5, .1, .1), 'comb_mse_19': closs.get_diff_comb_mse_loss(.5, .1, .9), 'comb_mse_91': closs.get_diff_comb_mse_loss(.5, .9, .1), 'comb_mse_99': closs.get_diff_comb_mse_loss(.5, .9, .9)}
 
 for name, loss in losses.items():
     print(name)

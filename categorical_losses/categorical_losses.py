@@ -90,6 +90,31 @@ def get_ets_loss(threshold):
 
 # Differentiable losses
 
+def get_diff_pod_mae_loss(threshold):
+    def pod_mae(y_true, y_pred):
+        # Probability of detection = Misses / (Hits + Misses)
+        hits = K.sum(K.cast(K.sigmoid(y_true - threshold) * K.sigmoid(y_pred - threshold), dtype='float32'))
+        misses = K.sum(K.cast(K.sigmoid(y_true - threshold) * K.sigmoid((-1 * y_pred) - threshold), dtype='float32'))
+        pod = hits / (hits + misses)
+        mae = K.mean(K.abs(y_pred - y_true), axis=-1)
+
+        return pod + mae
+
+    return pod_mae
+
+def get_diff_pod_mse_loss(threshold):
+    def pod_mse(y_true, y_pred):
+        # Probability of detection = Misses / (Hits + Misses)
+        hits = K.sum(K.cast(K.sigmoid(y_true - threshold) * K.sigmoid(y_pred - threshold), dtype='float32'))
+        misses = K.sum(K.cast(K.sigmoid(y_true - threshold) * K.sigmoid((-1 * y_pred) - threshold), dtype='float32'))
+        pod = hits / (hits + misses)
+        mse = K.mean(K.square(y_pred - y_true), axis=-1)
+
+        return 0.1*pod + mse
+
+    return pod_mse
+
+
 def get_diff_pom_mae_loss(threshold):
     def pom_mae(y_true, y_pred):
         # Probability of missing = Misses / (Hits + Misses)
@@ -102,7 +127,7 @@ def get_diff_pom_mae_loss(threshold):
 
     return pom_mae
 
-def get_diff_pom_mse_loss(threshold):
+def get_diff_pom_mse_loss(threshold, pom_coef):
     def pom_mse(y_true, y_pred):
         # Probability of missing = Misses / (Hits + Misses)
         hits = K.sum(K.cast(K.sigmoid(y_true - threshold) * K.sigmoid(y_pred - threshold), dtype='float32'))
@@ -110,49 +135,49 @@ def get_diff_pom_mse_loss(threshold):
         pom = misses / (hits + misses)
         mse = K.mean(K.square(y_pred - y_true), axis=-1)
 
-        return 0.1*pom + mse
+        return pom_coef*pom + mse
 
     return pom_mse
 
-def get_diff_pofd_mae_loss(threshold):
+def get_diff_pofd_mae_loss(threshold, pofd_coef):
     def pofd_mae(y_true, y_pred):
-        # False Alarm Rate score = False Alarms / (False Alarms + Hits)
+        # Probability of false detection = False Alarms / (False Alarms + Hits)
         true_neg = K.sum(K.cast(K.sigmoid((-1 * y_true) - threshold) * K.sigmoid((-1 * y_pred) - threshold), dtype='float32'))
         f_alarms = K.sum(K.cast(K.sigmoid((-1 * y_true) - threshold) * K.sigmoid(y_pred - threshold), dtype='float32'))
         pofd = f_alarms / (f_alarms + true_neg) 
         mae = K.mean(K.abs(y_pred - y_true), axis=-1)
 
-        return pofd + mae
+        return pofd_coef*pofd + mae
 
     return pofd_mae
 
 
-def get_diff_pofd_mse_loss(threshold):
+def get_diff_pofd_mse_loss(threshold, pofd_coef):
     def pofd_mse(y_true, y_pred):
-        # False Alarm Rate score = False Alarms / (False Alarms + Hits)
+        # Probability of false detection = False Alarms / (False Alarms + Hits)
         true_neg = K.sum(K.cast(K.sigmoid((-1 * y_true) - threshold) * K.sigmoid((-1 * y_pred) - threshold), dtype='float32'))
         f_alarms = K.sum(K.cast(K.sigmoid((-1 * y_true) - threshold) * K.sigmoid(y_pred - threshold), dtype='float32'))
         pofd = f_alarms / (f_alarms + true_neg) 
         mse = K.mean(K.square(y_pred - y_true), axis=-1)
 
-        return 0.1*pofd + mse
+        return pofd_coef*pofd + mse
 
     return pofd_mse
 
-def get_diff_far_mae_loss(threshold):
+def get_diff_far_mae_loss(threshold, far_coef):
     def far_mae(y_true, y_pred):
-        # False Alarm Rate score = False Alarms / (False Alarms + Hits)
+        # False Alarm Ratio score = False Alarms / (False Alarms + Hits)
         hits = K.sum(K.cast(K.sigmoid(y_true - threshold) * K.sigmoid(y_pred - threshold), dtype='float32'))
         f_alarms = K.sum(K.cast(K.sigmoid((-1 * y_true) - threshold) * K.sigmoid(y_pred - threshold), dtype='float32'))
         far = f_alarms / (f_alarms + hits)
         mae = K.mean(K.abs(y_pred - y_true), axis=-1)
 
-        return far + mae
+        return far_coef*far + mae
 
     return far_mae
 
 
-def get_diff_far_mse_loss(threshold):
+def get_diff_far_mse_loss(threshold, far_coef):
     def far_mse(y_true, y_pred):
         # False Alarm Rate score = False Alarms / (False Alarms + Hits)
         hits = K.sum(K.cast(K.sigmoid(y_true - threshold) * K.sigmoid(y_pred - threshold), dtype='float32'))
@@ -160,7 +185,7 @@ def get_diff_far_mse_loss(threshold):
         far = f_alarms / (f_alarms + hits)
         mse = K.mean(K.square(y_pred - y_true), axis=-1)
         
-        return 0.1*far + mse
+        return far_coef*far + mse
 
     return far_mse
 
@@ -181,7 +206,7 @@ def get_diff_comb_mae_loss(threshold):
     return comb_mae
 
 
-def get_diff_comb_mse_loss(threshold):
+def get_diff_comb_mse_loss(threshold, pom_coef, pofd_coef):
     def comb_mse(y_true, y_pred):
         # False Alarm Rate score = False Alarms / (False Alarms + Hits)
         hits = K.sum(K.cast(K.sigmoid(y_true - threshold) * K.sigmoid(y_pred - threshold), dtype='float32'))
@@ -190,9 +215,9 @@ def get_diff_comb_mse_loss(threshold):
         f_alarms = K.sum(K.cast(K.sigmoid((-1 * y_true) - threshold) * K.sigmoid(y_pred - threshold), dtype='float32'))
         true_neg = K.sum(K.cast(K.sigmoid((-1 * y_true) - threshold) * K.sigmoid((-1 * y_pred) - threshold), dtype='float32'))
         pofd = f_alarms / (f_alarms + true_neg) 
-        mse = K.square(K.abs(y_pred - y_true), axis=-1)
+        mse = K.mean(K.square(y_pred - y_true), axis=-1)
 
-        return 0.1*pom + 0.1*pofd + mse
+        return pom_coef*pom + pofd_coef*pofd + mse
 
     return comb_mse
 
