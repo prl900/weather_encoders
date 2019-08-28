@@ -74,7 +74,7 @@ def get_unet(loss):
     model = models.Model(inputs=inputs, outputs=conv10)
 
     sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-    model.compile(loss=loss, optimizer=sgd, metrics=['mse','mae', closs.get_pod_loss(.1), closs.get_pom_loss(.1), closs.get_far_loss(.1), closs.get_pofd_loss(.1)])
+    model.compile(loss=loss, optimizer=sgd, metrics=['mse','mae', closs.get_pod_loss(.5), closs.get_pom_loss(.5), closs.get_far_loss(.5), closs.get_pofd_loss(.5)])
     print(model.summary())
 
     return model
@@ -119,7 +119,7 @@ y_test = np.log(1+y_test)
 
 #losses = {'pom_mae': closs.get_diff_pom_mae_loss(.5), 'pofd_mae': closs.get_diff_pofd_mae_loss(.5),'pom_mse': closs.get_diff_pom_mse_loss(.5), 'pofd_mse': closs.get_diff_pofd_mse_loss(.5), 'mae': 'mae', 'mse': 'mse'}
 #losses = {'far_mae': closs.get_diff_far_mae_loss(.5),'pom_mse': closs.get_diff_pom_mse_loss(.5), 'far_mse': closs.get_diff_far_mse_loss(.5), 'pofd_mse': closs.get_diff_pofd_mse_loss(.5), 'comb_mae': closs.get_diff_comb_mae_loss(.5), 'comb_mse': closs.get_diff_comb_mse_loss(.5, .1, .1)}
-losses = {'comb_mse_11': closs.get_diff_comb_mse_loss(.5, .1, .1), 'comb_mse_19': closs.get_diff_comb_mse_loss(.5, .1, .9), 'comb_mse_91': closs.get_diff_comb_mse_loss(.5, .9, .1), 'comb_mse_99': closs.get_diff_comb_mse_loss(.5, .9, .9)}
+losses = {'comb_mse_01': closs.get_diff_comb_mse_loss(.5, .0, .0), 'comb_mse_02': closs.get_diff_comb_mse_loss(.5, .0, .2), 'comb_mse_04': closs.get_diff_comb_mse_loss(.5, .0, .4), 'comb_mse_08': closs.get_diff_comb_mse_loss(.5, .0, .8), 'comb_mse_22': closs.get_diff_comb_mse_loss(.5, .2, .2), 'comb_mse_24': closs.get_diff_comb_mse_loss(.5, .2, .4), 'comb_mse_28': closs.get_diff_comb_mse_loss(.5, .2, .8)}
 
 for name, loss in losses.items():
     print(name)
