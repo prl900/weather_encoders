@@ -190,7 +190,7 @@ def get_diff_far_mse_loss(threshold, far_coef):
     return far_mse
 
 
-def get_diff_comb_mae_loss(threshold):
+def get_diff_comb_mae_loss(threshold, pom_coef, pofd_coef):
     def comb_mae(y_true, y_pred):
         # False Alarm Rate score = False Alarms / (False Alarms + Hits)
         hits = K.sum(K.cast(K.sigmoid(y_true - threshold) * K.sigmoid(y_pred - threshold), dtype='float32'))
@@ -201,7 +201,7 @@ def get_diff_comb_mae_loss(threshold):
         pofd = f_alarms / (f_alarms + true_neg) 
         mae = K.mean(K.abs(y_pred - y_true), axis=-1)
 
-        return pom + pofd + mae
+        return pom_coef*pom + pofd_coef*pofd + mae
 
     return comb_mae
 
