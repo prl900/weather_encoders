@@ -30,7 +30,7 @@ def verif_pofd(y_obs, y_pred, threshold):
     return f_alarms/(f_alarms+true_neg)
 
 def get_stats(modelh5, lmbda, mu, x_test, y_test):
-    print(modelh5[13:20], end =",")
+    print(modelh5[13:19], end =",")
 
     model = load_model(modelh5, custom_objects={'comb_mse': closs.get_diff_comb_mse_loss(1., lmbda, mu), 'comb_mae': closs.get_diff_comb_mae_loss(1., lmbda, mu), 'pod': closs.get_pod_loss(1.), 'pom': closs.get_pom_loss(1.), 'far': closs.get_far_loss(1.), 'pofd': closs.get_pofd_loss(1.)})
 
