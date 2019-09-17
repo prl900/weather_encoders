@@ -5,20 +5,17 @@ import seaborn as sns
 df = pd.read_csv("results.txt", header=None, names=["Model", "POD 0.2","POD 0.5","POD 1","POD 2","POD 4","POD 8", "POFD 0.2","POFD 0.5","POFD 1","POFD 2","POFD 4","POFD 8", "Nada"])
 df = df.drop(columns=["Nada"])
 
-df = pd.melt(df[["Model", "POD 1", "POFD 1"]].iloc[:5], id_vars="Model")
-print(df)
-sns.barplot(data=df, hue='variable', x="Model", y='value')
-#sns.barplot(data=df_pofd[["POFD 1"]].T)
-#df_pod.iloc[0:2].plot.bar(rot=0, subplots=True)
-plt.show()
-exit()
-print(df)
+def show_barplot(data, threshold, reg_loss):
+    df = pd.melt(data[["Model", "POD {}".format(threshold), "POFD {}".format(threshold)]].iloc[:5], id_vars="Model")
+    df['Model'] = df['Model'].map(lambda x: u"λ={}, μ={}".format(str(x)[4], str(x)[5]))
+    df['variable'] = df['variable'].map(lambda x: str(x).split(" ")[0])
+    ax = sns.barplot(data=df, hue='variable', x="Model", y='value')#.set_title('lalala')
+    ax.set(xlabel="Coefficients", ylabel='Probability')
+    ax.set(ylim=(0, 1))
+    plt.title('Model skill (threshold of detection = {})'.format(threshold))
+    plt.legend(loc='lower right')
+    plt.show()
 
-df_pod = df[["POD 0.2","POD 0.5","POD 1","POD 2","POD 4","POD 8"]]
-df_pofd = df[["POFD 0.2","POFD 0.5","POFD 1","POFD 2","POFD 4","POFD 8"]]
-print(df_pod[["POD 1"]])
-
-sns.barplot(data=df[["POD 1", "POFD 1"]].iloc[:5].T)
-#sns.barplot(data=df_pofd[["POFD 1"]].T)
-#df_pod.iloc[0:2].plot.bar(rot=0, subplots=True)
-plt.show()
+show_barplot(df, "0.5", "MAE")
+show_barplot(df, "1", "MAE")
+show_barplot(df, "2", "MAE")

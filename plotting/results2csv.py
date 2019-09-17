@@ -29,6 +29,14 @@ def verif_pofd(y_obs, y_pred, threshold):
     
     return f_alarms/(f_alarms+true_neg)
 
+def verif_mse(y_obs, y_pred):
+    
+    return np.mean(np.square(y_obs-y_pred))
+
+def verif_mae(y_obs, y_pred):
+    
+    return np.mean(np.abs(y_obs-y_pred))
+
 def get_stats(modelh5, lmbda, mu, x_test, y_test):
     print(modelh5[13:19], end =",")
 
@@ -43,7 +51,8 @@ def get_stats(modelh5, lmbda, mu, x_test, y_test):
         pofd = verif_pofd(y_test, y_pred, v)
         print(pofd, end =",")
 
-    print()
+    print(verif_mae(y_test, y_pred), end =",")
+    print(verif_mse(y_test, y_pred))
 
 x = np.load("/data/ERA-Int/10zlevels_min.npy")
 y = np.log(1+np.load("/data/ERA-Int/tp_min.npy"))
