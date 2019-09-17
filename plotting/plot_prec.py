@@ -5,6 +5,11 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 
+import sys
+sys.path.append('../categorical_losses')
+
+import categorical_losses as closs
+
 red = np.array([255, 252, 250, 247, 244, 242, 239, 236, 234, 231, 229, 226, 223, 221, 218, 215, 213, 210,
                      207, 205, 202, 199, 197, 194, 191, 189, 186, 183, 181, 178, 176, 173, 170, 168, 165, 162,
                      157, 155, 152, 150, 148, 146, 143, 141, 139, 136, 134, 132, 129, 127, 125, 123, 120, 118,
@@ -60,61 +65,6 @@ vals[:, 2] = blue
 rain = ListedColormap(vals)
 
 
-def comb_mae(y_true, y_pred):
-    threshold = .5
-    # False Alarm Rate score = False Alarms / (False Alarms + Hits)
-    hits = K.sum(K.cast(K.sigmoid(y_true - threshold) * K.sigmoid(y_pred - threshold), dtype='float32'))
-    misses = K.sum(K.cast(K.sigmoid(y_true - threshold) * K.sigmoid((-1 * y_pred) - threshold), dtype='float32'))
-    f_alarms = K.sum(K.cast(K.sigmoid((-1 * y_true) - threshold) * K.sigmoid(y_pred - threshold), dtype='float32'))
-
-    return (hits+misses)/hits + f_alarms/(f_alarms+hits) + K.mean(K.abs(y_pred-y_true), axis=-1)
-
-def pod_mae(y_true, y_pred):
-    threshold = .5
-    # Probability of detection = Hits / (Hits + Misses)
-    hits = K.sum(K.cast(K.sigmoid(y_true - threshold) * K.sigmoid(y_pred - threshold), dtype='float32'))
-    misses = K.sum(K.cast(K.sigmoid(y_true - threshold) * K.sigmoid((-1 * y_pred) - threshold), dtype='float32'))
-
-    return (hits+misses)/hits + K.mean(K.abs(y_pred - y_true), axis=-1)
-
-def pod(y_true, y_pred):
-    threshold = .5
-    # Probability of detection = Hits / (Hits + Misses)
-    hits = K.sum(K.cast(tf.math.logical_and(K.greater(y_true, threshold), K.greater(y_pred, threshold)), dtype='float32'))
-    misses = K.sum(K.cast(tf.math.logical_and(K.greater(y_true, threshold), K.less(y_pred, threshold)), dtype='float32'))
-
-    return hits/(hits+misses)
-
-def far(y_true, y_pred):
-    threshold = .5
-    # False Alarm Rate score = False Alarms / (False Alarms + Hits)
-    hits = K.sum(K.cast(tf.math.logical_and(K.greater(y_true, threshold), K.greater(y_pred, threshold)), dtype='float32'))
-    f_alarms = K.sum(K.cast(tf.math.logical_and(K.less(y_true, threshold), K.greater(y_pred, threshold)), dtype='float32'))
-    
-    return f_alarms/(f_alarms+hits)
-
-def bias(y_true, y_pred):
-    threshold = .5
-    # Bias score = (Hits + False Alarms) / (Hits + Misses)
-    hits = K.sum(K.cast(tf.math.logical_and(K.greater(y_true, threshold), K.greater(y_pred, threshold)), dtype='float32'))
-    f_alarms = K.sum(K.cast(tf.math.logical_and(K.less(y_true, threshold), K.greater(y_pred, threshold)), dtype='float32'))
-    misses = K.sum(K.cast(tf.math.logical_and(K.greater(y_true, threshold), K.less(y_pred, threshold)), dtype='float32'))
-    
-    return (hits+f_alarms)/(hits+misses)
-
-def ets(y_true, y_pred):
-    threshold = .5
-    # Bias score = (Hits + False Alarms) / (Hits + Misses)
-    hits = K.sum(K.cast(tf.math.logical_and(K.greater(y_true, threshold), K.greater(y_pred, threshold)), dtype='float32'))
-    f_alarms = K.sum(K.cast(tf.math.logical_and(K.less(y_true, threshold), K.greater(y_pred, threshold)), dtype='float32'))
-    misses = K.sum(K.cast(tf.math.logical_and(K.greater(y_true, threshold), K.less(y_pred, threshold)), dtype='float32'))
-    true_neg = K.sum(K.cast(tf.math.logical_and(K.less(y_true, threshold), K.less(y_pred, threshold)), dtype='float32'))
-   
-    a_ref = ((hits+f_alarms)*(hits+misses))/(hits+f_alarms+misses+true_neg) 
-
-    return (hits-a_ref)/(hits+f_alarms+misses+a_ref)
-
-
 x = np.load("/data/ERA-Int/10zlevels_min.npy")
 #y = np.log(1+np.load("/data/ERA-Int/tp_min.npy"))
 y = np.load("/data/ERA-Int/tp_min.npy")
@@ -133,33 +83,23 @@ y = None
 
 print(x_test.shape, y_test.shape)
 
-plt.imsave('test_prec1.png', y_test[4500,:,:,0], vmax=180, cmap=rain)
-plt.imsave('test_prec2.png', y_test[4501,:,:,0], vmax=180, cmap=rain)
-plt.imsave('test_prec3.png', y_test[4502,:,:,0], vmax=180, cmap=rain)
-y_test = None
-print("Done 1")
+for i in range(100):
+    plt.imsave('test_prec_{}.png'.format(i), y_test[i,:,:,0], vmax=20, cmap=rain)
 
-model = load_model('unet_mse_raw_10levels.h5', custom_objects={'pod': pod, 'far': far, 'ets': ets, 'bias': bias})
+def plot_prec(modelh5, lmbda, mu):
+    model = load_model(modelh5, custom_objects={'comb_mse': closs.get_diff_comb_mse_loss(1., lmbda, mu), 'comb_mae': closs.get_diff_comb_mae_loss(1., lmbda, mu), 'pod': closs.get_pod_loss(1.), 'pom': closs.get_pom_loss(1.), 'far': closs.get_far_loss(1.), 'pofd': closs.get_pofd_loss(1.)})
+    
+    for i in range(100):
+        out = model.predict(x_test[i:i+1,:])
+        plt.imsave('test_mse_{}{}_pred_{}.png'.format(lmbda, mu, i), out[0,:,:,0], vmin=0, vmax=20, cmap=rain)
 
-out = model.predict(x_test[4500:4501,:])
-plt.imsave('test_mse_raw_pred1.png', out[0,:,:,0], vmax=180, cmap=rain)
-
-out = model.predict(x_test[4501:4502,:])
-plt.imsave('test_mse_raw_pred2.png', out[0,:,:,0], vmax=180, cmap=rain)
-
-out = model.predict(x_test[4502:4503,:])
-plt.imsave('test_mse_raw_pred3.png', out[0,:,:,0], vmax=180, cmap=rain)
-print("Done 2")
-
-##############
-
-model = load_model('unet_mse_10levels.h5', custom_objects={'pod_mae': pod_mae, 'pod': pod, 'far': far, 'ets': ets, 'bias': bias})
-out = model.predict(x_test[4500:4501,:])
-plt.imsave('test_mse_pred1.png', out[0,:,:,0], vmax=np.log(181), cmap=rain)
-
-out = model.predict(x_test[4501:4502,:])
-plt.imsave('test_mse_pred2.png', out[0,:,:,0], vmax=np.log(181), cmap=rain)
-
-out = model.predict(x_test[4502:4503,:])
-plt.imsave('test_mse_pred3.png', out[0,:,:,0], vmax=np.log(181), cmap=rain)
-print("Done 3")
+plot_prec('../unet_comb_mae_00_10levels.h5', 0, 0)
+plot_prec('../unet_comb_mae_20_10levels.h5', 2, 0)
+plot_prec('../unet_comb_mae_40_10levels.h5', 4, 0)
+plot_prec('../unet_comb_mae_80_10levels.h5', 8, 0)
+plot_prec('../unet_comb_mae_02_10levels.h5', 0, 2)
+plot_prec('../unet_comb_mae_04_10levels.h5', 0, 4)
+plot_prec('../unet_comb_mae_08_10levels.h5', 0, 8)
+plot_prec('../unet_comb_mae_22_10levels.h5', 2, 2)
+plot_prec('../unet_comb_mae_44_10levels.h5', 4, 4)
+plot_prec('../unet_comb_mae_88_10levels.h5', 8, 8)
