@@ -4,25 +4,35 @@ import matplotlib.pyplot as plt
 import numpy
 import pickle
 import math
-
+import seaborn as sns
+sns.set()
 
 def plot_history(hist_file, var_name, prefix): 
-    h = pickle.load(open(hist_file, "rb"))
+    h = pickle.load(open(hist_file.format(prefix), "rb"))
 
     fig, ax1 = plt.subplots()
-    ax1.set_xlabel('epoch')
-    ax1.set_ylabel('mse')
-    ax1.set_title('Mean Squared Error')
-    ax1.set_ylim([0, math.ceil(max(h[var_name]))])
-    ax1.plot(h[var_name])
-    ax1.plot(h['val_' + var_name])
+    ax2 = ax1.twinx()
+    ax1.set_xlabel('Epoch')
+    ax1.set_ylabel('MSE')
+    ax1.set_title('Training Validation Error')
+    ax1.set_ylim([0, 1])
+    #ax1.plot(h[var_name])
+    ax1.plot(h['val_' + var_name], '-b')
+    ax2.set_ylabel('Probability')
+    ax2.set_ylim([0,1])
+    ax2.plot(h['val_pom'], '--r')
+    ax2.plot(h['val_pofd'], '--g')
 
-    fig.legend(['train_' + var_name, 'val_' + var_name], loc='upper right')
+    fig.legend(["MSE", 'POM', 'POFD'], loc='upper right')
 
     plt.savefig('{}_{}.png'.format(prefix, var_name))
 
 
-plot_history("../train_history_unet_d_comb_msa_00_10lvels.pkl", "mean_squared_error", "00")
+plot_history("../train_history_unet_comb_mse_{}_10lvels.pkl", "mean_squared_error", "00")
+plot_history("../train_history_unet_comb_mse_{}_10lvels.pkl", "mean_squared_error", "20")
+plot_history("../train_history_unet_comb_mse_{}_10lvels.pkl", "mean_squared_error", "02")
+
+exit()
 plot_history("../train_history_unet_d_comb_mae_90_10lvels.pkl", "mean_squared_error", "90")
 plot_history("../train_history_unet_d_comb_mae_09_10lvels.pkl", "mean_squared_error", "09")
 
