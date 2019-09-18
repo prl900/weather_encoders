@@ -1,14 +1,6 @@
 import numpy as np
-from keras.models import load_model
-from keras import backend as K
-import tensorflow as tf
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
-
-import sys
-sys.path.append('../categorical_losses')
-
-import categorical_losses as closs
 
 red = np.array([255, 252, 250, 247, 244, 242, 239, 236, 234, 231, 229, 226, 223, 221, 218, 215, 213, 210,
                      207, 205, 202, 199, 197, 194, 191, 189, 186, 183, 181, 178, 176, 173, 170, 168, 165, 162,
@@ -64,45 +56,13 @@ vals[:, 1] = green
 vals[:, 2] = blue
 rain = ListedColormap(vals)
 
+a = np.array([[0,20]])
+plt.figure(figsize=(9, 2.5))
+img = plt.imshow(a, cmap=rain)
+plt.gca().set_visible(False)
+cax = plt.axes([0.1, 0.2, 0.8, 0.6])
+cbar = plt.colorbar(orientation="horizontal", cax=cax, ticks=[0, 5, 10, 15, 20])
+cbar.ax.tick_params(labelsize=30)
+plt.savefig("colorbar.png")
 
-x = np.load("/data/ERA-Int/10zlevels_min.npy")
-#y = np.log(1+np.load("/data/ERA-Int/tp_min.npy"))
-y = np.load("/data/ERA-Int/tp_min.npy")
-
-idxs = np.arange(x.shape[0])
-np.random.seed(0)
-np.random.shuffle(idxs)
-
-print(idxs[14000:14002])
-exit()
-
-x = x[idxs, :, :, :]
-x_test = x[14000:, :]
-x = None
-
-y = y[idxs, :, :, None]
-y_test = y[14000:, :]
-y = None
-
-print(x_test.shape, y_test.shape)
-
-for i in range(100):
-    plt.imsave('test_prec_{}.png'.format(i), y_test[i,:,:,0], vmax=20, cmap=rain)
-
-def plot_prec(modelh5, lmbda, mu):
-    model = load_model(modelh5, custom_objects={'comb_mse': closs.get_diff_comb_mse_loss(1., lmbda, mu), 'comb_mae': closs.get_diff_comb_mae_loss(1., lmbda, mu), 'pod': closs.get_pod_loss(1.), 'pom': closs.get_pom_loss(1.), 'far': closs.get_far_loss(1.), 'pofd': closs.get_pofd_loss(1.)})
-    
-    for i in range(100):
-        out = model.predict(x_test[i:i+1,:])
-        plt.imsave('test_mse_{}{}_pred_{}.png'.format(lmbda, mu, i), out[0,:,:,0], vmin=0, vmax=20, cmap=rain)
-
-plot_prec('../unet_comb_mae_00_10levels.h5', 0, 0)
-plot_prec('../unet_comb_mae_20_10levels.h5', 2, 0)
-plot_prec('../unet_comb_mae_40_10levels.h5', 4, 0)
-plot_prec('../unet_comb_mae_80_10levels.h5', 8, 0)
-plot_prec('../unet_comb_mae_02_10levels.h5', 0, 2)
-plot_prec('../unet_comb_mae_04_10levels.h5', 0, 4)
-plot_prec('../unet_comb_mae_08_10levels.h5', 0, 8)
-plot_prec('../unet_comb_mae_22_10levels.h5', 2, 2)
-plot_prec('../unet_comb_mae_44_10levels.h5', 4, 4)
-plot_prec('../unet_comb_mae_88_10levels.h5', 8, 8)
+#plt.imsave('test_mse_{}{}_pred_{}.png'.format(lmbda, mu, i), out[0,:,:,0], vmin=0, vmax=20, cmap=rain)
