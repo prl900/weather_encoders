@@ -6,11 +6,11 @@ import numpy as np
 import pickle
 from categorical_losses import categorical_losses as closs
 
-def get_unet(loss):
+def get_unet(loss, feats):
     concat_axis = 3
     inputs = layers.Input(shape = (80, 120, 10))
 
-    feats = 32
+    #feats = 64
     bn0 = BatchNormalization(axis=3)(inputs)
     conv1 = layers.Conv2D(feats, (3, 3), activation='relu', padding='same', name='conv1_1')(bn0)
     bn1 = BatchNormalization(axis=3)(conv1)
@@ -75,7 +75,8 @@ def get_unet(loss):
 
     sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
     #model.compile(loss=loss, optimizer=sgd, metrics=['mse','mae', closs.get_pod_loss(.5), closs.get_pom_loss(.5), closs.get_far_loss(.5), closs.get_pofd_loss(.5)])
-    model.compile(loss=loss, optimizer=sgd, metrics=['mse','mae', closs.get_pom_loss(.5), closs.get_pom_loss(1.), closs.get_pom_loss(2.), closs.get_pofd_loss(.5), closs.get_pofd_loss(1.), closs.get_pofd_loss(2.)])
+    #model.compile(loss=loss, optimizer=sgd, metrics=['mse','mae', closs.get_pom_loss(.5), closs.get_pom_loss(1.), closs.get_pom_loss(2.), closs.get_pofd_loss(.5), closs.get_pofd_loss(1.), closs.get_pofd_loss(2.)])
+    model.compile(loss=loss, optimizer=sgd, metrics=['mse','mae'])
     print(model.summary())
 
     return model
@@ -148,6 +149,17 @@ losses = {'comb_mae_00': closs.get_diff_comb_mae_loss(1., 0., 0.),
           'comb_mse_22': closs.get_diff_comb_mse_loss(1., 2., 2.),
           'comb_mse_44': closs.get_diff_comb_mse_loss(1., 4., 4.),
           'comb_mse_88': closs.get_diff_comb_mse_loss(1., 8., 8.)}
+
+for feats in [16, 32, 64]:
+    name = 'mse_{}'.format(feats)
+    model = get_unet('mse', feats)
+    print(x_train.shape, y_train.shape, x_test.shape, y_test.shape)
+    history = model.fit(x_train, y_train, epochs=100, batch_size=24, validation_data=(x_test, y_test))
+    with open('train_history_unet_{}_10lvels.pkl'.format(name), 'wb') as f:
+        pickle.dump(history.history, f)
+    model.save('unet_{}_10levels.h5'.format(name))
+
+exit()
 
 for name, loss in losses.items():
     print(name)
