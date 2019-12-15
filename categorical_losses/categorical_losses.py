@@ -126,7 +126,19 @@ def get_diff_pom_mae_loss(threshold):
 
     return pom_mae
 
-def get_diff_pom_mse_loss(threshold, pom_coef):
+def get_diff_pom_mse_loss0(threshold, pom_coef):
+    def pom_mse(y_true, y_pred):
+        # Probability of missing = Misses / (Hits + Misses)
+        hits = K.sum(K.cast(K.sigmoid(y_true - threshold) * K.sigmoid(y_pred - threshold), dtype='float32'))
+        misses = K.sum(K.cast(K.sigmoid(y_true - threshold) * K.sigmoid((-1 * y_pred) - threshold), dtype='float32'))
+        pom = misses / (hits + misses)
+        mse = K.mean(K.square(y_pred - y_true), axis=-1)
+
+        return pom_coef*pom + mse
+
+    return pom_mse
+
+def get_diff_pom_mse_loss1(threshold, pom_coef):
     def pom_mse(y_true, y_pred):
         # Probability of missing = Misses / (Hits + Misses)
         hits = K.sum(K.cast(K.sigmoid(y_true - threshold) * K.sigmoid(y_pred - threshold), dtype='float32'))

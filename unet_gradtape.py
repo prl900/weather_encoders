@@ -124,9 +124,9 @@ losses = {'comb_mae_00': closs.get_diff_comb_mae_loss(1., 0., 0.),
           'comb_mse_44': closs.get_diff_comb_mse_loss(1., 4., 4.),
           'comb_mse_88': closs.get_diff_comb_mse_loss(1., 8., 8.)}
 
-losses = {'comb_mse2_20': closs.get_diff_comb_mse_loss2(1., 2., 0.),
-          'comb_mse2_02': closs.get_diff_comb_mse_loss2(1., 0., 2.),
-          'comb_mse2_22': closs.get_diff_comb_mse_loss2(1., 2., 2.)}
+losses = {'comb_mse0_00': closs.get_diff_comb_mse_loss2(1., 0., 0.),
+          'comb_mse1_00': closs.get_diff_comb_mse_loss2(1., 0., 0.),
+          'comb_mse2_00': closs.get_diff_comb_mse_loss2(1., 0., 0.)}
 
 
 @tf.function
@@ -157,7 +157,7 @@ def train(train_dataset, test_dataset, loss, loss_name, model):
   f = open("train_record_{}.out".format(loss_name),"w+")
   f.write('epoch,train_mse,test_mse,test_pod,test_pom,test_far,test_pofd\n')
 
-  for epoch in range(100):
+  for epoch in range(25):
     for (batch, (inputs, outputs)) in enumerate(train_dataset):
       train_step(model, inputs, outputs, optimizer)
       train_loss(loss(model(inputs), outputs))
