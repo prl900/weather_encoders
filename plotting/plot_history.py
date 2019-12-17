@@ -7,35 +7,34 @@ import math
 import seaborn as sns
 sns.set()
 
-def plot_history(hist_file, var_name): 
+def plot_history(hist_file): 
     h = pickle.load(open(hist_file, "rb"))
     print(h)
     fig, ax1 = plt.subplots()
-    #ax2 = ax1.twinx()
+    ax2 = ax1.twinx()
     ax1.set_xlabel('Epoch')
     ax1.set_ylabel('MSE')
     ax1.set_title('Training Validation Error')
     ax1.set_ylim([0, 1])
-    ax1.plot(h[var_name], '--r')
-    ax1.plot(h['val_' + var_name], '-b')
-    #ax2.set_ylabel('Probability')
-    #ax2.set_ylim([0,1])
-    #ax2.plot(h['val_pom'], '--r')
-    #ax2.plot(h['val_pofd'], '--g')
+    #ax1.plot(h[var_name], '--r')
+    ax1.plot(h['val_mse'], '-b')
+    ax2.set_ylabel('Probability')
+    ax2.set_ylim([0,1])
+    ax2.plot(h['val_pom'], '--r')
+    ax2.plot(h['val_pofd'], '--g')
+    ax2.grid(False)
 
-    #fig.legend(["MSE", 'POM', 'POFD'], loc='upper right')
-    fig.legend(["MSE"], loc='upper right')
+    fig.legend(["MSE", 'POM', 'POFD'], loc='upper right')
+    #fig.legend(["MSE"], loc='upper right')
 
-    plt.savefig('{}.png'.format(hist_file[:-3], var_name))
+    plt.savefig('{}png'.format(hist_file[:-3]))
 
 
-plot_history("../train_history_unet_mse_16_10lvels.pkl", "mse")
-plot_history("../train_history_unet_mse_32_10lvels.pkl", "mse")
-plot_history("../train_history_unet_mse_64_10lvels.pkl", "mse")
+plot_history("../train_history_unet_comb3_mse_00_10lvels.pkl")
+plot_history("../train_history_unet_comb3_mse_20_10lvels.pkl")
+plot_history("../train_history_unet_comb3_mse_02_10lvels.pkl")
 
 exit()
-plot_history("../train_history_unet_comb_mse_{}_10lvels.pkl", "mean_squared_error", "20")
-plot_history("../train_history_unet_comb_mse_{}_10lvels.pkl", "mean_squared_error", "02")
 
 plot_history("../train_history_unet_d_comb_mae_90_10lvels.pkl", "mean_squared_error", "90")
 plot_history("../train_history_unet_d_comb_mae_09_10lvels.pkl", "mean_squared_error", "09")
