@@ -42,7 +42,6 @@ def show_barplot(data, threshold, reg_loss, mode):
     #plt.show()
 
 df = pd.read_csv("results.txt", header=None, names=["Model", "POD 0.2","POD 0.5","POD 1","POD 2","POD 4","POD 8", "POFD 0.2","POFD 0.5","POFD 1","POFD 2","POFD 4","POFD 8", "MAE", "MSE"])
-#df = df.drop(columns=["Nada"])
 
 show_barplot(df, "1", "MAE", "0x")
 show_barplot(df, "1", "MAE", "x0")
