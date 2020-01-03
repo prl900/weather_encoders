@@ -82,9 +82,11 @@ def get_unet(loss):
 #x = x[:, :, :, ]
 #x = x[:, :, :, [0,2,5]]
 #x = np.load("/data/ERA-Int/10zlevels.npy")[:, :, :, [0,2,5]]
-x = np.load("/data/ERA-Int/10zlevels.npy")
+#x = np.load("/data/ERA-Int/10zlevels.npy")
+x = np.load("/data/ERA-Int/10zlevels_min.npy")
 print(x.shape)
-y = np.load("/data/ERA-Int/full_tp_1980_2016.npy")
+#y = np.load("/data/ERA-Int/full_tp_1980_2016.npy")
+y = np.load("/data/ERA-Int/tp_min.npy")
 print(y.shape, y.min(), y.max(), y.mean(), np.percentile(y, 95), np.percentile(y, 97.5), np.percentile(y, 99))
 
 idxs = np.arange(x.shape[0])
@@ -92,13 +94,17 @@ np.random.seed(0)
 np.random.shuffle(idxs)
 
 x = x[idxs, :, :, :]
-x_train = x[:40000, :]
-x_test = x[40000:, :]
+#x_train = x[:40000, :]
+#x_test = x[40000:, :]
+x_train = x[:16000, :]
+x_test = x[16000:, :]
 x = None
 
 y = y[idxs, :, :, None]
-y_train = y[:40000, :]
-y_test = y[40000:, :]
+#y_train = y[:40000, :]
+#y_test = y[40000:, :]
+y_train = y[:16000, :]
+y_test = y[16000:, :]
 y = None
 
 print(x_train.shape, y_train.shape)
@@ -121,6 +127,7 @@ y_test = np.log(1+y_test)
 #losses = {'far_mae': closs.get_diff_far_mae_loss(.5),'pom_mse': closs.get_diff_pom_mse_loss(.5), 'far_mse': closs.get_diff_far_mse_loss(.5), 'pofd_mse': closs.get_diff_pofd_mse_loss(.5), 'comb_mae': closs.get_diff_comb_mae_loss(.5), 'comb_mse': closs.get_diff_comb_mse_loss(.5, .1, .1)}
 #losses = {'comb_mse_00': closs.get_diff_comb_mse_loss(1., .0, .0), 'comb_mse_02': closs.get_diff_comb_mse_loss(1., .0, .2), 'comb_mse_04': closs.get_diff_comb_mse_loss(1., .0, .4), 'comb_mse_08': closs.get_diff_comb_mse_loss(1., .0, .8), 'comb_mse_20': closs.get_diff_comb_mse_loss(1., .2, .0), 'comb_mse_40': closs.get_diff_comb_mse_loss(1., .4, .0), 'comb_mse_80': closs.get_diff_comb_mse_loss(1., .8, .0), 'comb_mse_55': closs.get_diff_comb_mse_loss(1., .5, .5)}
 #losses = {'d_comb_mae_d20': closs.get_diff_comb_mae_loss(1., 2., .0), 'd_comb_mae_0d2': closs.get_diff_comb_mae_loss(1., .0, 2.)}
+"""
 losses = {'comb3_mae_00': closs.get_diff_comb_mae_loss3(1., 0., 0.), 
           'comb3_mae_10': closs.get_diff_comb_mae_loss3(1., 1., 0.),
           'comb3_mae_20': closs.get_diff_comb_mae_loss3(1., 2., 0.),
@@ -147,6 +154,18 @@ losses = {'comb3_mae_00': closs.get_diff_comb_mae_loss3(1., 0., 0.),
           'comb3_mse_22': closs.get_diff_comb_mse_loss3(1., 2., 2.),
           'comb3_mse_44': closs.get_diff_comb_mse_loss3(1., 4., 4.),
           'comb3_mse_88': closs.get_diff_comb_mse_loss3(1., 8., 8.)}
+"""
+
+losses = {'comb4_mse_0000': closs.get_diff_comb_mae_loss4(1., 0., .0), 
+          'comb4_mse_1000': closs.get_diff_comb_mae_loss4(1., .1, .0),
+          'comb4_mse_2500': closs.get_diff_comb_mae_loss4(1., .25, .0),
+          'comb4_mse_5000': closs.get_diff_comb_mae_loss4(1., .5, .0),
+          'comb4_mse_0010': closs.get_diff_comb_mae_loss4(1., .0, .1),
+          'comb4_mse_0025': closs.get_diff_comb_mae_loss4(1., .0, .25),
+          'comb4_mse_0050': closs.get_diff_comb_mae_loss4(1., .0, .5),
+          'comb4_mse_1010': closs.get_diff_comb_mae_loss4(1., .1, .1),
+          'comb4_mse_2525': closs.get_diff_comb_mae_loss4(1., .25, .25),
+          'comb4_mse_5050': closs.get_diff_comb_mae_loss4(1., .5, .5)}
 
 """
 for feats in [16, 32, 64]:

@@ -221,6 +221,7 @@ def get_diff_comb_mse_loss(threshold, pom_coef, pofd_coef):
 
     return comb_mse
 
+
 def get_diff_comb_mse_loss2(threshold, pom_coef, pofd_coef):
     def comb_mse(y_true, y_pred):
         # False Alarm Rate score = False Alarms / (False Alarms + Hits)
@@ -236,6 +237,7 @@ def get_diff_comb_mse_loss2(threshold, pom_coef, pofd_coef):
 
     return comb_mse
 
+@tf.function
 def get_diff_comb_mae_loss3(threshold, pom_coef, pofd_coef):
     def comb_mae(y_true, y_pred):
         # False Alarm Rate score = False Alarms / (False Alarms + Hits)
@@ -252,6 +254,7 @@ def get_diff_comb_mae_loss3(threshold, pom_coef, pofd_coef):
     return comb_mae
 
 
+@tf.function
 def get_diff_comb_mse_loss3(threshold, pom_coef, pofd_coef):
     def comb_mse(y_true, y_pred):
         # False Alarm Rate score = False Alarms / (False Alarms + Hits)
@@ -264,6 +267,26 @@ def get_diff_comb_mse_loss3(threshold, pom_coef, pofd_coef):
         mse = K.mean(K.square(y_pred - y_true), axis=-1)
 
         return pom_coef*pom + pofd_coef*pofd + mse
+
+    return comb_mse
+
+
+@tf.function
+def get_diff_comb_mse_loss4(threshold, pom_coef, pofd_coef):
+    def comb_mse(y_true, y_pred):
+        # False Alarm Rate score = False Alarms / (False Alarms + Hits)
+        hits = K.sum(K.cast(K.greater(y_true, threshold), dtype='float32') * K.sigmoid(y_pred - threshold))
+        misses = K.sum(K.cast(K.greater(y_true, threshold), dtype='float32') * K.sigmoid(threshold - y_pred))
+        pom = misses / (hits + misses)
+        f_alarms = K.sum(K.cast(K.less(y_true, threshold), dtype='float32') * K.sigmoid(y_pred - threshold))
+        true_neg = K.sum(K.cast(K.less(y_true, threshold), dtype='float32') * K.sigmoid(threshold - y_pred))
+        pofd = f_alarms / (f_alarms + true_neg) 
+        mse = K.mean(K.square(y_pred - y_true), axis=-1)
+
+        lmbda = pom_coef * mse / pom
+        mu = pofd_coef * mse / pofd
+        
+        return lmbda*pom + mu*pofd + (1-pom_coef-pofd_coef)*mse
 
     return comb_mse
 
