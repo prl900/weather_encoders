@@ -85,16 +85,18 @@ print(x.shape)
 y = np.load("/data/ERA-Int/tp_min.npy")
 print(y.shape, y.min(), y.max(), y.mean(), np.percentile(y, 95), np.percentile(y, 97.5), np.percentile(y, 99))
 
-idxs = np.arange(x.shape[0])
-np.random.seed(0)
-np.random.shuffle(idxs)
-
-x = x[idxs, :, :, :]
 x_train = x[:16000, :]
 x_test = x[16000:, :]
 x = None
 
-y = y[idxs, :, :, None]
+#Shuffling train dataset for an even training
+np.random.seed(0)
+idxs_train = np.arange(x_train.shape[0])
+np.random.shuffle(idxs_train)
+x_train = x_train[idxs_train, :]
+y_train = y_train[idxs_train, :]
+
+y = y[:, :, :, None]
 y_train = y[:16000, :]
 y_test = y[16000:, :]
 y = None
