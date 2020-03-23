@@ -69,6 +69,7 @@ y = y[idxs, :, :, None]
 y_test = y[14000:, :]
 y = None
 
+"""
 print("MAE:")
 get_stats('../unet_comb_mae_00_10levels.h5', .0, .0, x_test, y_test)
 
@@ -86,10 +87,12 @@ get_stats('../unet_comb_mae_11_10levels.h5', 1, 1, x_test, y_test)
 get_stats('../unet_comb_mae_22_10levels.h5', 2, 2, x_test, y_test)
 get_stats('../unet_comb_mae_44_10levels.h5', 4, 4, x_test, y_test)
 get_stats('../unet_comb_mae_88_10levels.h5', 8, 8, x_test, y_test)
+"""
 
 print("MSE:")
-get_stats('../unet_comb_mse_00_10levels.h5', .0, .0, x_test, y_test)
+get_stats('../unet_comb_mse_55_10levels.h5', .0, .0, x_test, y_test)
 
+"""
 get_stats('../unet_comb_mse_10_10levels.h5', 1, .0, x_test, y_test)
 get_stats('../unet_comb_mse_20_10levels.h5', 2, .0, x_test, y_test)
 get_stats('../unet_comb_mse_40_10levels.h5', 4, .0, x_test, y_test)
@@ -104,4 +107,4 @@ get_stats('../unet_comb_mse_11_10levels.h5', 1, 1, x_test, y_test)
 get_stats('../unet_comb_mse_22_10levels.h5', 2, 2, x_test, y_test)
 get_stats('../unet_comb_mse_44_10levels.h5', 4, 4, x_test, y_test)
 get_stats('../unet_comb_mse_88_10levels.h5', 8, 8, x_test, y_test)
-
+"""

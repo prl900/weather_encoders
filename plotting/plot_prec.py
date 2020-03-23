@@ -1,6 +1,6 @@
 import numpy as np
-from keras.models import load_model
-from keras import backend as K
+from tensorflow.keras.models import load_model
+from tensorflow.keras import backend as K
 import tensorflow as tf
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
@@ -74,7 +74,6 @@ np.random.seed(0)
 np.random.shuffle(idxs)
 
 print(idxs[14000:14002])
-exit()
 
 x = x[idxs, :, :, :]
 x_test = x[14000:, :]
@@ -86,23 +85,42 @@ y = None
 
 print(x_test.shape, y_test.shape)
 
-for i in range(100):
-    plt.imsave('test_prec_{}.png'.format(i), y_test[i,:,:,0], vmax=20, cmap=rain)
+i = 1
+plt.imsave('test_prec_{}.png'.format(i), y_test[i,:,:,0], vmax=20, cmap=rain)
 
 def plot_prec(modelh5, lmbda, mu):
+    i = 1
     model = load_model(modelh5, custom_objects={'comb_mse': closs.get_diff_comb_mse_loss(1., lmbda, mu), 'comb_mae': closs.get_diff_comb_mae_loss(1., lmbda, mu), 'pod': closs.get_pod_loss(1.), 'pom': closs.get_pom_loss(1.), 'far': closs.get_far_loss(1.), 'pofd': closs.get_pofd_loss(1.)})
     
-    for i in range(100):
-        out = model.predict(x_test[i:i+1,:])
-        plt.imsave('test_mse_{}{}_pred_{}.png'.format(lmbda, mu, i), out[0,:,:,0], vmin=0, vmax=20, cmap=rain)
+    out = model.predict(x_test[i:i+1,:])
+    plt.imsave('test_mse_{}{}_pred_{}.png'.format(lmbda, mu, i), out[0,:,:,0], vmin=0, vmax=20, cmap=rain)
 
-plot_prec('../unet_comb_mae_00_10levels.h5', 0, 0)
-plot_prec('../unet_comb_mae_20_10levels.h5', 2, 0)
-plot_prec('../unet_comb_mae_40_10levels.h5', 4, 0)
-plot_prec('../unet_comb_mae_80_10levels.h5', 8, 0)
-plot_prec('../unet_comb_mae_02_10levels.h5', 0, 2)
-plot_prec('../unet_comb_mae_04_10levels.h5', 0, 4)
-plot_prec('../unet_comb_mae_08_10levels.h5', 0, 8)
-plot_prec('../unet_comb_mae_22_10levels.h5', 2, 2)
-plot_prec('../unet_comb_mae_44_10levels.h5', 4, 4)
-plot_prec('../unet_comb_mae_88_10levels.h5', 8, 8)
+"""
+plot_prec('../unet_comb3_mae_00_10levels.h5', 0, 0)
+plot_prec('../unet_comb3_mae_20_10levels.h5', 2, 0)
+plot_prec('../unet_comb3_mae_40_10levels.h5', 4, 0)
+plot_prec('../unet_comb3_mae_80_10levels.h5', 8, 0)
+plot_prec('../unet_comb3_mae_02_10levels.h5', 0, 2)
+plot_prec('../unet_comb3_mae_04_10levels.h5', 0, 4)
+plot_prec('../unet_comb3_mae_08_10levels.h5', 0, 8)
+plot_prec('../unet_comb3_mae_22_10levels.h5', 2, 2)
+plot_prec('../unet_comb3_mae_44_10levels.h5', 4, 4)
+plot_prec('../unet_comb3_mae_88_10levels.h5', 8, 8)
+
+
+plot_prec('../unet_comb3_mae_20_10levels.h5', 2, 0)
+plot_prec('../unet_comb3_mae_02_10levels.h5', 0, 2)
+plot_prec('../unet_comb3_mae_10_10levels.h5', 1, 0)
+plot_prec('../unet_comb3_mae_01_10levels.h5', 0, 1)
+"""
+
+
+plot_prec('../unet_comb3_mse_50_10levels.h5', .5, .0)
+plot_prec('../unet_comb3_mse_10_10levels.h5', 1., .0)
+plot_prec('../unet_comb3_mse_20_10levels.h5', 2., .0)
+plot_prec('../unet_comb3_mse_05_10levels.h5', .0, .5)
+plot_prec('../unet_comb3_mse_01_10levels.h5', .0, 1.)
+plot_prec('../unet_comb3_mse_02_10levels.h5', .0, 2.)
+plot_prec('../unet_comb3_mse_55_10levels.h5', .5, .5)
+plot_prec('../unet_comb3_mse_11_10levels.h5', 1., 1.)
+plot_prec('../unet_comb3_mse_22_10levels.h5', 2., 2.)
