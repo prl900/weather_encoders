@@ -78,6 +78,10 @@ def get_unet(loss):
 
     return model
 
+model = get_unet('mse')
+sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+model.compile(loss='mse', optimizer=sgd, metrics=['mse','mae', closs.get_pom_loss(1.), closs.get_pofd_loss(1.)])
+print(model.summary())
 
 # Levels [1000, 900, 800, 700, 600, 500, 400, 300, 200, 100]
 x = np.load("/data/ERA-Int/10zlevels_min.npy")
@@ -85,8 +89,8 @@ print(x.shape)
 y = np.load("/data/ERA-Int/tp_min.npy")
 print(y.shape, y.min(), y.max(), y.mean(), np.percentile(y, 95), np.percentile(y, 97.5), np.percentile(y, 99))
 
-x_train = x[:16000, :]
-x_test = x[16000:, :]
+x_train = x[:37800, :]
+x_test = x[37800:, :]
 x = None
 
 #Shuffling train dataset for an even training
@@ -97,8 +101,8 @@ x_train = x_train[idxs_train, :]
 y_train = y_train[idxs_train, :]
 
 y = y[:, :, :, None]
-y_train = y[:16000, :]
-y_test = y[16000:, :]
+y_train = y[:37800, :]
+y_test = y[37800:, :]
 y = None
 
 print(x_train.shape, y_train.shape)
